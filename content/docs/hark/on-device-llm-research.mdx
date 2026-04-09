@@ -1,0 +1,27 @@
+---
+title: On-Device LLM Research
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+This page is intentionally short.
+
+The detailed model evaluation lives in the Hark repo and changes faster than this docs site should. The source of truth is the checked-in research document in `hark-release/docs/on-device-llm-research.md`.
+
+## What is current
+
+- Hark uses **EmbeddingGemma 308M** for intent selection.
+- Hark uses **Qwen3 0.6B** for slot filling.
+- The current shipped app keeps those stages separate.
+
+## Why this page is archived
+
+The long-form benchmark numbers, package comparisons, and hardware notes here were useful during model selection, but they are too detailed and too time-sensitive for the main docs flow.
+
+If you are trying to understand Hark today, read:
+
+- [Hark Overview](/docs/hark/overview)
+- [Architecture](/docs/hark/architecture)
+- [NLU Architecture](/docs/hark/nlu-architecture)
+
+If you want the historical research notes, open the source file in the Hark repository directly.

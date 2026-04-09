@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
 import settings from "@/content/settings/config.json";
+import { siteUrl } from "../env-url";
 
 export const DEFAULT_SEO: Metadata = {
-  metadataBase: new URL(settings.siteUrl),
+  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
   title: {
     default: settings.title,
     template: "%s",
@@ -15,7 +16,7 @@ export const DEFAULT_SEO: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_AU",
-    url: settings.siteUrl,
+    ...(siteUrl ? { url: siteUrl } : {}),
     title: settings.title,
     description: settings.description,
     siteName: settings.title,
@@ -24,7 +25,7 @@ export const DEFAULT_SEO: Metadata = {
         url: settings.defaultOGImage,
         width: 1200,
         height: 630,
-        alt: "TinaCMS Docs",
+        alt: "Hark & OACP Docs",
       },
     ],
   },

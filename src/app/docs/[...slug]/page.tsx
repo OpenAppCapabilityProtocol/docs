@@ -1,5 +1,4 @@
 import { TinaClient } from "@/app/tina-client";
-import settings from "@/content/siteConfig.json";
 import { fetchTinaData } from "@/services/tina/fetch-tina-data";
 import { GitHubMetadataProvider } from "@/src/components/page-metadata/github-metadata-context";
 import GithubConfig from "@/src/utils/github-client";
@@ -7,11 +6,6 @@ import client from "@/tina/__generated__/client";
 import { getTableOfContents } from "@/utils/docs";
 import { getSeo } from "@/utils/metadata/getSeo";
 import Document from ".";
-
-const siteUrl =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:3000"
-    : settings.siteUrl;
 
 export async function generateStaticParams() {
   try {
@@ -64,10 +58,10 @@ export async function generateMetadata({
   if (!data.docs.seo) {
     data.docs.seo = {
       __typename: "DocsSeo",
-      canonicalUrl: `${siteUrl}/tinadocs/docs/${slug}`,
+      canonicalUrl: `/docs/${slug}`,
     };
   } else if (!data.docs.seo?.canonicalUrl) {
-    data.docs.seo.canonicalUrl = `${siteUrl}/tinadocs/docs/${slug}`;
+    data.docs.seo.canonicalUrl = `/docs/${slug}`;
   }
 
   return getSeo(data.docs.seo, {

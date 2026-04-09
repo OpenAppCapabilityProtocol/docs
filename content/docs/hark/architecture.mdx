@@ -1,0 +1,87 @@
+---
+title: Architecture
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+Hark is the reference OACP voice assistant. It discovers app capabilities at runtime, resolves voice commands with a two-stage local pipeline, dispatches Android intents, and handles async results without leaving the assistant.
+
+## Discovery
+
+`OacpDiscoveryHandler.kt` scans for exported `.oacp` `ContentProvider`s via `PackageManager`. For each provider it reads two paths:
+
+- `/manifest` - the machine-readable `oacp.json` capability file.
+- `/context` - the LLM-readable `OACP.md` semantic context file.
+
+`OACP.md` is validated for presence but **not currently consumed by the LLM**. It is reserved for future BYOK (bring-your-own-key) cloud models that have larger context windows.
+
+## Two-stage resolution
+
+### Stage 1 - Intent selection (EmbeddingGemma 308M)
+
+The transcript is embedded using EmbeddingGemma and compared via cosine similarity against pre-embedded action descriptions (built from each action's `description`, `aliases`, `examples`, `keywords`, and parameter metadata).
+
+Actions are ranked by semantic score. A floor of 0.30 rejects garbage matches, and a confidence gate at 0.35 filters ambiguous cases. Only the top-ranked action proceeds to slot filling.
+
+### Stage 2 - Slot filling (Qwen3 0.6B)
+
+The selected action's description and parameter definitions are sent to Qwen3. The model extracts parameter values (numbers, names, durations, enum choices) from the transcript.
+
+## Intent dispatch
+
+Actions are dispatched as Android intents via `android_intent_plus`:
+
+- **Broadcast** for background-safe actions (e.g. set alarm, toggle flashlight).
+- **Activity launch** for foreground-required actions (e.g. open a playlist).
+
+Every dispatch includes `org.oacp.extra.REQUEST_ID` for result correlation.
+
+## Async result handling
+
+`OacpResultReceiver.kt` (native `BroadcastReceiver`) listens for `org.oacp.ACTION_RESULT` broadcasts from target apps. Results flow back through:
+
+```
+OacpResultReceiver (Kotlin)
+  -> EventChannel (platform channel)
+    -> OacpResultService (Dart)
+      -> AssistantScreen (chat bubble + TTS)
+```
+
+The user sees the result in the conversation and hears it spoken aloud, all without leaving Hark.
+
+## STT / TTS
+
+- **STT** - `speech_to_text` package, backed by Android-native `SpeechRecognizer` (cloud recognition by default). Tap-to-cancel and a 10-second silence timeout.
+- **TTS** - `flutter_tts` for spoken confirmations and result readback.
+
+## Context budget
+
+EmbeddingGemma handles intent selection via vector similarity - no token budget concerns for that stage. Qwen3 receives only the selected action's description and parameter schema (~400 tokens).
+
+`OACP.md` content is not currently consumed by the on-device pipeline. It is reserved for future BYOK cloud models with larger context windows.
+
+## Android assistant integration
+
+Hark registers as a system-level digital assistant via Android's `VoiceInteractionService` framework. When the user long-presses Home (or uses the device's assistant gesture), Android launches Hark and auto-starts listening.
+
+### Required components
+
+Android validates all of these before allowing an app to be selected as the default assistant:
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `HarkVoiceInteractionService` | Kotlin | Background service Android binds to. Must declare `BIND_VOICE_INTERACTION` permission. |
+| `HarkSessionService` | Kotlin | Creates `HarkSession` instances when assistant is invoked. |
+| `HarkSession` | Kotlin | `onShow()` launches MainActivity with `EXTRA_LAUNCHED_FROM_ASSIST`. |
+| `HarkRecognitionService` | Kotlin | Stub `RecognitionService` - required by Android to qualify as assistant. Actual STT handled by Flutter's `speech_to_text`. |
+| `voice_interaction_service.xml` | `res/xml/` | Metadata referencing sessionService, recognitionService, and `supportsAssist="true"`. |
+| `ACTION_ASSIST` intent filter | Manifest | On MainActivity - required for assistant role qualification. |
+| `ACTION_VOICE_ASSIST` intent filter | Manifest | On MainActivity - used by some devices for voice-specific activation. |
+
+### Role management
+
+On Android 10+ (API 29), Hark uses `RoleManager` to request `ROLE_ASSISTANT` on first launch. If the role isn't held, a system dialog prompts the user. A banner in the Flutter UI also links to `android.settings.VOICE_INPUT_SETTINGS` for manual configuration.
+
+### Continuous listening
+
+When launched via the assistant gesture, Hark enters continuous listening mode: the mic auto-restarts after each command completes and TTS finishes speaking. Tapping the mic button exits continuous mode.

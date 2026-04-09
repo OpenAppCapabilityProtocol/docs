@@ -1,0 +1,63 @@
+---
+title: NLU Architecture
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+> **Status:** Implemented. Hark uses EmbeddingGemma 308M for intent selection and Qwen3 0.6B for slot filling. This page explains the design choice, not every internal detail.
+
+## The design problem
+
+The first version tried to do too much with one generative model. That made three things harder than they needed to be:
+
+- matching a command to the right capability
+- extracting structured parameters
+- deciding when something is not a tool invocation at all
+
+Hark now separates those concerns.
+
+## The split
+
+```
+transcript
+  -> EmbeddingGemma 308M
+  -> best capability match
+  -> confidence gate
+  -> Qwen3 0.6B for parameter extraction
+  -> Android intent dispatch
+```
+
+## Stage 1: capability matching
+
+EmbeddingGemma compares the transcript against cached embeddings for discovered OACP actions. Those embeddings are built from the action description, aliases, examples, keywords, and parameter metadata.
+
+This stage answers one question only:
+
+> Which installed action is the best match for this transcript?
+
+Because OACP apps are discovered at runtime, this has to be zero-shot. Embeddings work well for that because new actions do not need pre-trained labels.
+
+### Confidence thresholds
+
+| Score | Decision |
+|---|---|
+| ≥ 0.75 | High confidence - route to tool |
+| 0.50 – 0.75 | Moderate - route to tool, flag for logging |
+| 0.35 – 0.50 | Low - ask clarification or try conversation |
+| < 0.35 | No match - route to conversation |
+
+## Stage 2: parameter extraction
+
+Qwen3 0.6B only sees the selected action and its parameter schema. That keeps the prompt small and focused. The model extracts values like numbers, names, durations, and enum choices from the transcript.
+
+## Conversation fallback
+
+Not every utterance should become a tool call. If the confidence is too low, Hark can avoid dispatching and route the request elsewhere.
+
+The intended order is:
+
+- check whether an installed OACP app can handle it
+- use a fallback provider if the user has configured one
+- otherwise decline cleanly
+
+That keeps Hark centered on routing and invocation instead of pretending every request is a tool call.

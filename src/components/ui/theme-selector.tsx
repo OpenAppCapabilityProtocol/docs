@@ -4,16 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { MdArrowDropDown } from "react-icons/md";
 import { MdHelpOutline } from "react-icons/md";
 
-const themes = ["default", "tina", "blossom", "lake", "pine", "indigo"];
+const themes = ["pine", "hark"] as const;
+const fallbackTheme = "pine";
+const normalizeTheme = (value?: string | null) =>
+  value && themes.includes(value as (typeof themes)[number])
+    ? value
+    : fallbackTheme;
 
 export const BROWSER_TAB_THEME_KEY = "browser-tab-theme";
-
-// Default theme colors from root
-const DEFAULT_COLORS = {
-  background: "#FFFFFF",
-  text: "#000000",
-  border: "#000000",
-};
 
 export const ThemeSelector = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -24,11 +22,11 @@ export const ThemeSelector = () => {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [selectedTheme, setSelectedTheme] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      return (
-        sessionStorage.getItem(BROWSER_TAB_THEME_KEY) || theme || "default"
+      return normalizeTheme(
+        sessionStorage.getItem(BROWSER_TAB_THEME_KEY) || theme || fallbackTheme
       );
     }
-    return theme || "default";
+    return normalizeTheme(theme || fallbackTheme);
   });
 
   // Close dropdown when clicking outside
@@ -59,13 +57,12 @@ export const ThemeSelector = () => {
 
   // Update selected theme when theme changes from dropdown
   useEffect(() => {
-    if (theme && !themes.includes(theme)) {
-      // If theme is not in our list, it means it's a dark/light mode change
-      setSelectedTheme(selectedTheme);
-    } else {
-      setSelectedTheme(theme || "default");
-    }
-  }, [theme, selectedTheme]);
+    const storedTheme =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem(BROWSER_TAB_THEME_KEY)
+        : null;
+    setSelectedTheme(normalizeTheme(storedTheme || theme || fallbackTheme));
+  }, [theme]);
 
   useEffect(() => {
     if (mounted && selectedTheme) {
@@ -134,22 +131,11 @@ export const ThemeSelector = () => {
                 type="button"
                 key={t}
                 onClick={() => handleThemeChange(t)}
-                className={`w-full px-3 py-1 text-sm text-left hover:bg-neutral-hover transition-colors cursor-pointer first:rounded-t-md last:rounded-b-md my-0.25 first:mt-0 last:mb-0 ${
-                  t === "default" ? "" : `theme-${t}`
-                } ${t === selectedTheme ? "bg-neutral-hover" : ""}`}
+                className={`w-full px-3 py-1 text-sm text-left hover:bg-neutral-hover transition-colors cursor-pointer first:rounded-t-md last:rounded-b-md my-0.25 first:mt-0 last:mb-0 ${`theme-${t}`} ${t === selectedTheme ? "bg-neutral-hover" : ""}`}
                 style={{
-                  backgroundColor:
-                    t === "default"
-                      ? DEFAULT_COLORS.background
-                      : "var(--brand-primary-light)",
-                  color:
-                    t === "default"
-                      ? DEFAULT_COLORS.text
-                      : "var(--brand-primary)",
-                  border:
-                    t === "default"
-                      ? `1px solid ${DEFAULT_COLORS.border}`
-                      : "1px solid var(--brand-primary)",
+                  backgroundColor: "var(--brand-primary-light)",
+                  color: "var(--brand-primary)",
+                  border: "1px solid var(--brand-primary)",
                 }}
               >
                 {t.charAt(0).toUpperCase() + t.slice(1)}

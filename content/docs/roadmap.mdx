@@ -1,0 +1,63 @@
+---
+title: Roadmap
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+A short view of what is shipped now and what is next. This page intentionally stays narrower than the individual repo notes.
+
+## Protocol
+
+- **`v0.3` shipped**: richer capability metadata, confirmation semantics, entity providers, async result transport, and the current Android SDK surface.
+- **`v0.4` is in progress**: runtime improvements driven by Hark's tool-calling path.
+- **`v1.0` is the stabilization target**: schema lock, compatibility guarantees, and long-term IDs.
+
+## Android SDK
+
+- **Local AAR available now**: `oacp-android-release.aar`
+- **Core helpers shipped**: `OacpReceiver`, `OacpActivity`, `OacpParams`, `OacpResult`, `OacpProvider`
+- **Next**: Maven Central publishing and continued hardening of the Android docs
+
+Other SDKs are not documented as installable products until there is code to install.
+
+## Hark (open-source assistant)
+
+### Shipped
+
+- On-device discovery via `ContentProvider` scanning
+- Two-stage NLU: EmbeddingGemma 308M for intent selection, Qwen3 0.6B for slot filling
+- Foreground and broadcast dispatch paths with async result correlation
+- Registration as Android system assistant (`VoiceInteractionService`, `ROLE_ASSISTANT`)
+- Continuous listening mode after assistant-gesture activation
+- Tested integrations with the OACP Test App demo, Breezy Weather, Binary Eye, Voice Recorder, Wikipedia, ArchiveTune
+
+### In progress
+
+- **Self-hosted inference** - connect Hark to Ollama or LM Studio on a local network for unlimited context and `OACP.md` consumption
+- **BYOK cloud fallback** - bring-your-own-key for OpenAI, Gemini, Anthropic when no local model is available
+- **Better STT** - evaluate whisper.cpp and sherpa-onnx for fully on-device speech recognition
+- **Disambiguation UI** - show top candidates as chips when scores are close and learn from user feedback
+
+### Planned
+
+- **Wake word** - "Hey Hark" activation without touching the phone
+- **Lightweight overlay** - a floating assistant panel over the current app instead of launching the full MainActivity
+- **Personalization** - assistant learns user preferences and per-app vocabulary over time
+- **Gemma 4 single-model pipeline** - once `flutter_gemma` supports it, collapse the two-stage pipeline into a single call
+- **iOS** - exploring feasibility
+
+## Ecosystem
+
+- [Breezy Weather](https://github.com/OpenAppCapabilityProtocol/breezy-weather)
+- [Binary Eye](https://github.com/OpenAppCapabilityProtocol/BinaryEye)
+- [Voice Recorder](https://github.com/OpenAppCapabilityProtocol/Voice-Recorder)
+- [Libre Camera](https://github.com/OpenAppCapabilityProtocol/librecamera)
+- [Wikipedia](https://github.com/OpenAppCapabilityProtocol/apps-android-wikipedia)
+- [ArchiveTune](https://github.com/OpenAppCapabilityProtocol/ArchiveTune)
+- [Live Darbar](https://github.com/0xharkirat/live_darbar)
+
+## How to help
+
+- **Add OACP to an app.** The single most impactful thing you can do. Fork, integrate, open a PR against the ecosystem list.
+- **Test Hark on your device and file issues.** Edge cases in discovery, dispatch, and async results are where the protocol hardens.
+- **Protocol feedback.** Open an issue on the [oacp repo](https://github.com/OpenAppCapabilityProtocol/oacp) if you find a limitation.

@@ -1,0 +1,85 @@
+---
+title: Hark Overview
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+**Hark is the open-source voice assistant that discovers and controls Android apps using on-device AI.**
+
+> The name "Hark" means *"to listen"*, and it is also short for Harkirat.
+
+Hark is the open-source assistant built on [OACP](/docs/oacp/what-is-oacp). It discovers what installed apps can do and lets you control them by voice on-device.
+
+```
+"Hey Hark, what's the weather?"
+    -> discovers Breezy Weather's OACP capabilities
+    -> dispatches broadcast intent
+    -> app returns data in background
+    -> Hark speaks: "Currently 22 degrees, partly cloudy"
+```
+
+## How it works at a glance
+
+1. **Listen** - on-device speech-to-text captures your voice command.
+2. **Discover** - scans installed apps for OACP capability manifests via Android `ContentProvider`.
+3. **Resolve** - two-stage on-device AI pipeline matches your command to the right app action and extracts parameters.
+4. **Dispatch** - fires an Android `Intent` to the target app (broadcast for background, activity for foreground).
+5. **Respond** - receives async results from the app, shows them in chat, and speaks them aloud.
+
+The user never leaves Hark. Apps do the work in the background and send results back.
+
+## On-device AI pipeline
+
+The shipped local pipeline has two stages:
+
+| Stage | Model | What it does |
+|-------|-------|-------------|
+| Intent selection | [EmbeddingGemma](https://ai.google.dev/gemma/docs/core/embedding_gemma) 308M | Semantic similarity ranking against all discovered capabilities. Confidence-gated at 0.35. |
+| Slot filling | [Qwen3 0.6B](https://huggingface.co/Qwen/Qwen3-0.6B) | Extracts parameters (numbers, names, durations) from the matched utterance. |
+
+This keeps the matching step cheap and only sends the selected action schema to the generative model. For the full reasoning, see [NLU architecture](/docs/hark/nlu-architecture).
+
+## OACP-enabled apps
+
+Hark works with any app that implements OACP. These are tested and working today:
+
+| App | What you can do |
+|-----|----------------|
+| [Breezy Weather](https://github.com/OpenAppCapabilityProtocol/breezy-weather) | "What's the weather?" - async result spoken back |
+| [Binary Eye](https://github.com/OpenAppCapabilityProtocol/BinaryEye) | "Open the QR scanner" / "Create QR code for hello world" |
+| [Voice Recorder](https://github.com/OpenAppCapabilityProtocol/Voice-Recorder) | "Start audio recording" |
+| [OACP Test App](https://github.com/OpenAppCapabilityProtocol/oacp/tree/main/examples/example_oacp_test) | "Increment counter" / "What's the counter at?" |
+| [Wikipedia](https://github.com/OpenAppCapabilityProtocol/apps-android-wikipedia) | "Search Wikipedia for Flutter" |
+| [ArchiveTune](https://github.com/OpenAppCapabilityProtocol/ArchiveTune) | "Play Lonely by Akon" - music playback by voice |
+
+Each is a fork showing exactly what was added to support OACP. Check the diff against upstream to see how simple the integration is.
+
+Want to add OACP to your own app? See [Getting started with OACP](/docs/oacp/getting-started).
+
+## Getting started
+
+### Prerequisites
+
+- Flutter (stable channel, >= 3.11)
+- Android device (a physical device is recommended because assistant integration and speech flow are more realistic there)
+- enough storage for the local model downloads
+
+### Build and run
+
+```bash
+git clone https://github.com/OpenAppCapabilityProtocol/hark.git
+cd hark
+flutter pub get
+flutter run
+```
+
+### First launch
+
+1. Grant microphone permission when prompted.
+2. Download the on-device models from the Local Models screen (EmbeddingGemma + Qwen3).
+3. Install any OACP-enabled app.
+4. Tap the mic and try a voice command.
+
+## Roadmap
+
+The short version: the protocol and Kotlin SDK ship today, and Hark is focused next on self-hosted inference, better speech input, and a lighter assistant UI. See the [roadmap](/docs/roadmap) for the tracked priorities.

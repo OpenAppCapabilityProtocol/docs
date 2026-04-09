@@ -14,7 +14,7 @@ export default function GitHubMetadata({
 
   if (!data) {
     return (
-      <div className={`text-slate-400 text-sm ${className}`}>
+      <div className={`text-neutral-text-secondary text-sm ${className}`}>
         Unable to load last updated info
       </div>
     );
@@ -34,11 +34,11 @@ export default function GitHubMetadata({
     : `Last updated ${lastUpdateInAbsoluteTime}`;
 
   return (
-    <div className={`text-slate-500 text-sm ${className}`}>
+    <div className={`text-neutral-text-secondary text-sm ${className}`}>
       <div className="flex sm:flex-row flex-col sm:items-center gap-2">
         <span>
           Last updated by{" "}
-          <span className="font-bold text-black">
+          <span className="font-bold text-neutral-text">
             {latestCommit.commit.author.name}
           </span>
           {` ${lastUpdateInRelativeTime}.`}
@@ -49,7 +49,7 @@ export default function GitHubMetadata({
             target="_blank"
             title={tooltipContent}
             rel="noopener noreferrer"
-            className="text-black hover:text-orange-600 underline flex flex-row items-center gap-1.5"
+            className="text-brand-primary-text hover:text-brand-primary underline flex flex-row items-center gap-1.5"
           >
             See history
             <FaHistory className="w-3 h-3" />

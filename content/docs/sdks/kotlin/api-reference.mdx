@@ -1,0 +1,74 @@
+---
+title: API Reference
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+Full reference for the public surface of the OACP Android SDK.
+
+## `Oacp` - protocol constants
+
+| Constant | Value |
+|----------|-------|
+| `Oacp.ACTION_RESULT` | `"org.oacp.ACTION_RESULT"` |
+| `Oacp.EXTRA_REQUEST_ID` | `"org.oacp.extra.REQUEST_ID"` |
+| `Oacp.EXTRA_STATUS` | `"org.oacp.extra.STATUS"` |
+| `Oacp.EXTRA_MESSAGE` | `"org.oacp.extra.MESSAGE"` |
+| `Oacp.EXTRA_RESULT` | `"org.oacp.extra.RESULT"` |
+| `Oacp.STATUS_COMPLETED` | `"completed"` |
+| `Oacp.STATUS_FAILED` | `"failed"` |
+| `Oacp.ERROR_NOT_FOUND` | `"not_found"` |
+| `Oacp.ERROR_MISSING_PARAMETERS` | `"missing_parameters"` |
+
+See [`Oacp.kt`](https://github.com/OpenAppCapabilityProtocol/oacp-android-sdk/blob/main/oacp-android/src/main/kotlin/org/oacp/android/Oacp.kt) for the full list.
+
+## `OacpResult` - factory methods
+
+| Method | Description |
+|--------|-------------|
+| `OacpResult.success(message, data?)` | Action completed |
+| `OacpResult.accepted(message?)` | Action acknowledged, processing |
+| `OacpResult.started(message?)` | Processing began |
+| `OacpResult.error(code, message, retryable?)` | Action failed |
+| `OacpResult.cancelled(message?)` | Action cancelled |
+
+## `OacpParams` - typed parameter access
+
+| Method | Returns | Notes |
+|--------|---------|-------|
+| `getString(name)` | `String?` | Matches by suffix, coerces from other types |
+| `getInt(name)` | `Int?` | Coerces from string |
+| `getLong(name)` | `Long?` | Coerces from string |
+| `getDouble(name)` | `Double?` | Coerces from string |
+| `getBoolean(name)` | `Boolean?` | Coerces from `"true"`/`"false"` |
+
+All getters return `null` when the parameter is absent. Use Kotlin's `?:` operator for defaults or `return OacpResult.error(...)` to reject the request.
+
+## `OacpReceiver` - abstract receiver
+
+Subclass and override the single `onAction` method:
+
+```kotlin
+abstract fun onAction(
+    context: Context,
+    action: String,
+    params: OacpParams,
+    requestId: String?
+): OacpResult?
+```
+
+Return `null` for fire-and-forget actions where the assistant should not wait for a result. Return an `OacpResult` to have it broadcast back automatically using the supplied `requestId`.
+
+The receiver automatically:
+
+- Calls `goAsync()` so your work runs on a background thread without blocking the `onReceive` 10-second limit
+- Wraps exceptions in `ERROR_INTERNAL` results
+- Uses `requestId` to correlate responses with the original request
+
+## `OacpProvider`
+
+Auto-registered via manifest merger at the authority `${applicationId}.oacp`. You never need to instantiate or subclass it directly. It:
+
+- Serves `oacp.json` at `content://${applicationId}.oacp/manifest`
+- Serves `OACP.md` at `content://${applicationId}.oacp/context`
+- Substitutes `__APPLICATION_ID__` placeholders with the real package name at runtime, so the same manifest works for `debug`, `staging`, and `release` variants without modification

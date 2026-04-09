@@ -116,11 +116,11 @@ export function ScrollBasedShowcase(data: {
                     }}
                   >
                     <div
-                      className={`my-2 bg-gradient-to-br bg-clip-text text-xl font-medium text-transparent ${
+                      className={`my-2 text-xl font-medium ${
                         isFocused
-                          ? "from-orange-400 via-orange-500 to-orange-600"
-                          : "from-gray-800 to-gray-700"
-                      } !important`}
+                          ? "brand-primary-gradient"
+                          : "text-neutral-text-secondary"
+                      }`}
                     >
                       {item.title}
                     </div>

@@ -76,38 +76,39 @@ export function CodeBlock({
   }
 
   return (
-    <div className={`relative w-full my-2 ${showCopyButton ? " group" : ""}`}>
+    <div className="my-4 w-full">
       <div
-        className={`absolute top-0 right-0 z-10 px-4 py-1 text-xs font-mono text-neutral-text-secondary transition-opacity duration-200 opacity-100 group-hover:opacity-0 group-hover:pointer-events-none ${
-          showCopyButton ? "" : "hidden"
+        className={`code-block-frame overflow-hidden bg-neutral-background-secondary/80 ${
+          showBorder
+            ? "rounded-xl border border-neutral-border-subtle shadow-sm"
+            : "rounded-b-xl"
         }`}
       >
-        {lang}
+        {showCopyButton && (
+          <div className="flex items-center justify-between border-b border-neutral-border-subtle px-4 py-2">
+            <span className="rounded-full bg-neutral-surface px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-text-secondary">
+              {lang}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(value);
+                setIsCopied(true);
+                setTimeout(() => setIsCopied(false), 1000);
+              }}
+              className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neutral-text-secondary transition hover:bg-neutral-surface hover:text-neutral-text"
+            >
+              {isCopied ? <FaCheck size={12} /> : <MdOutlineContentCopy />}
+              <span>{isCopied ? "Copied" : "Copy"}</span>
+            </button>
+          </div>
+        )}
+        <div
+          className="code-block-content overflow-x-auto px-4 py-4 text-[13px] leading-6 sm:text-sm"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Shiki output is trusted and already escaped for XSS safety.
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
       </div>
-      <div
-        className={`absolute top-0 right-0 z-10 mx-2 my-1 text-xs font-mono transition-opacity duration-200 opacity-0 group-hover:opacity-100 cursor-pointer ${
-          showCopyButton ? "" : "hidden"
-        }`}
-      >
-        <button
-          type="button"
-          onClick={() => {
-            navigator.clipboard.writeText(value);
-            setIsCopied(true);
-            setTimeout(() => setIsCopied(false), 1000);
-          }}
-          className="px-2 py-1 text-neutral-text-secondary rounded transition cursor-pointer flex items-center gap-1"
-        >
-          {isCopied ? <FaCheck size={12} /> : <MdOutlineContentCopy />}
-        </button>
-      </div>
-      <div
-        className={`shiki w-full overflow-x-auto bg-background-brand-code py-5 px-2 text-sm ${
-          showBorder ? "border border-neutral-border-subtle/50 shadow-sm" : ""
-        } ${showCopyButton ? "rounded-lg" : "rounded-b-xl"}`}
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: Shiki output is trusted and already escaped for XSS safety.
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
     </div>
   );
 }

@@ -7,8 +7,8 @@ export const Table = (props) => {
   const rowCount = tableRows.length;
 
   return (
-    <div className="my-6 overflow-x-auto rounded-lg shadow-md">
-      <table className="w-full table-auto">
+    <div className="my-6 overflow-x-auto rounded-xl border border-neutral-border-subtle bg-neutral-background-secondary/50 shadow-sm">
+      <table className="min-w-full table-auto text-sm leading-6">
         <tbody>
           {tableRows.map((row, rowIndex) => {
             // Each row has its own props.children array containing cells
@@ -18,15 +18,19 @@ export const Table = (props) => {
             return (
               <tr
                 key={`row-${rowIndex}`}
-                className={"bg-neutral-background-secondary/50"}
+                className={
+                  rowIndex === 0
+                    ? "bg-neutral-surface"
+                    : "bg-neutral-background-secondary/35"
+                }
               >
                 {cells.map((cell, cellIndex) => {
                   return (
                     <CellComponent
                       key={`cell-${rowIndex}-${cellIndex}`}
-                      className={` px-4 pt-2 ${
+                      className={`align-top px-4 py-3 ${
                         rowIndex === 0
-                          ? " text-left font-tuner bg-neutral-background-secondary  border-b-[0.5px] border-neutral-border "
+                          ? "border-b border-neutral-border text-left font-tuner text-brand-primary-text"
                           : ""
                       } ${cellIndex === 0 ? "max-w-xs break-words" : ""}
                       ${
