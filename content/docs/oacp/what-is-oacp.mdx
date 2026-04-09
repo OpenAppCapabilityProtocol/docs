@@ -1,0 +1,66 @@
+---
+title: What is OACP?
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+**OACP is an open protocol for Android apps. An app can describe what it can do, and a compatible assistant can discover and invoke those capabilities.**
+
+> Think of this as [MCP](https://modelcontextprotocol.io/) but for mobile apps, hence Open App Capability Protocol.
+
+## What ships today
+
+Today, OACP is built around standard Android pieces:
+
+- `oacp.json` - the machine-readable capability manifest
+- `OACP.md` - a plain-language context file for the app
+- an exported `.oacp` `ContentProvider` that serves those files
+- Android `Intent`s for foreground and background invocation
+
+The public protocol spec and Android SDK currently target Android apps, not a general cross-platform runtime.
+
+## Why it exists
+
+On Android, app-to-assistant integrations are usually vendor-specific. OACP is an attempt to make that contract open and reusable:
+
+- App developers describe capabilities once.
+- Assistants discover those capabilities at runtime.
+- Invocation stays inside normal Android primitives instead of a closed platform API.
+
+The protocol is separate from any one assistant. [Hark](/docs/hark/overview) is the reference implementation, not the protocol itself.
+
+## What an OACP app exposes
+
+| Piece | Purpose |
+|---|---|
+| `oacp.json` | Declares capabilities, parameters, metadata, and invocation details. |
+| `OACP.md` | Adds semantic context and disambiguation notes in plain language. |
+| `.oacp` `ContentProvider` | Serves `/manifest` and `/context` so assistants can discover the app. |
+
+Assistants discover the app through the `ContentProvider`, parse `oacp.json`, and use Android `Intent`s to invoke the selected action.
+
+## Two invocation patterns
+
+### Foreground handoff
+
+Use an Activity action when the app needs to open:
+
+- open the camera
+- show a screen
+- start an editor
+
+The assistant resolves the action, calls `startActivity()`, and the app takes over.
+
+### Background action with async result
+
+Use a broadcast action when the app can do the work without opening UI:
+
+- fetch the weather
+- read a stored value
+- perform a background task
+
+The assistant sends a broadcast, the app does the work, and the app can return an async result on `org.oacp.ACTION_RESULT`.
+
+## Start building
+
+If you want to add OACP to an app today, start with [Getting Started](/docs/oacp/getting-started). If you want to see the protocol in action first, read [Hark Overview](/docs/hark/overview).

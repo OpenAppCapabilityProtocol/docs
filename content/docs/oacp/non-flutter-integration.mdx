@@ -1,0 +1,70 @@
+---
+title: OACP Integration
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+OACP sits at the Android layer. If you are not using the Kotlin SDK directly, you can still expose capabilities by wiring the Android pieces yourself.
+
+That means:
+
+- two asset files
+- one exported `.oacp` `ContentProvider`
+- one Activity or `BroadcastReceiver` to handle the action intents
+
+Framework choice does not change the protocol boundary. Your bridge back into JavaScript or Dart is an app-level decision.
+
+## The integration steps
+
+### 1. Add the protocol assets
+
+Place these files in your Android assets directory, usually `android/app/src/main/assets/`:
+
+- `oacp.json`
+- `OACP.md`
+
+The file formats are the same ones used in the main [Getting Started](/docs/oacp/getting-started) guide.
+
+### 2. Expose them through a `ContentProvider`
+
+Your app needs an exported provider whose authority ends in `.oacp`:
+
+```xml
+<provider
+    android:name=".OacpMetadataProvider"
+    android:authorities="com.example.your_app.oacp"
+    android:exported="true" />
+```
+
+The provider must serve these two paths:
+
+- `content://com.example.your_app.oacp/manifest`
+- `content://com.example.your_app.oacp/context`
+
+In practice, that means reading `assets/oacp.json` and `assets/OACP.md` and streaming them back from native Android code.
+
+### 3. Handle the invocation intents
+
+When Hark resolves a command, it fires the action you declared in `oacp.json` and passes any parsed extras.
+
+Use:
+
+- an **Activity** for foreground work that needs UI
+- a **BroadcastReceiver** for background work
+
+If your app is built with a framework, this is the point where your native Android layer hands control back into that framework.
+
+## What stays Android-native
+
+The OACP contract itself is always Android-native:
+
+- the `ContentProvider`
+- the manifest authority
+- the invocation `Intent`
+- the async result broadcast, if you support async work
+
+Everything above that layer is your app architecture.
+
+## Keep it simple
+
+If you want the shortest implementation path, use the [Kotlin SDK](/docs/sdks/kotlin/quick-start). If you need full control, follow the Android-native approach described here.

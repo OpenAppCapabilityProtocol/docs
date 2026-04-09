@@ -2,6 +2,20 @@ pre.shiki {
   counter-reset: line;
 }
 
+.code-block-frame pre.shiki {
+  margin: 0;
+  min-width: max-content;
+  background: transparent !important;
+}
+
+.code-block-frame pre.shiki code {
+  display: grid;
+}
+
+.code-block-content .shiki {
+  overflow-x: visible !important;
+}
+
 .shiki .diff.add {
   background-color: rgba(22, 163, 77, 0.3);
   padding-top: 0.1rem;
@@ -72,6 +86,7 @@ pre.shiki {
 
 .shiki span.line {
   margin-right: 1rem;
+  padding-right: 1rem;
 }
 
 .shiki {

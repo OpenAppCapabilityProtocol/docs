@@ -1,0 +1,326 @@
+---
+title: Getting Started
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+Add OACP to any Android app. You create 2 metadata files, one `ContentProvider`, and one `BroadcastReceiver` (or `Activity`). That's it.
+
+## What you'll create
+
+| File | Purpose |
+|------|---------|
+| `assets/oacp.json` | Declares your app's capabilities (actions, parameters, metadata) |
+| `assets/OACP.md` | Plain-English context for the AI assistant |
+| `OacpMetadataProvider.kt` | ContentProvider so assistants can discover your app (auto-provided if using the SDK) |
+| Receiver or Activity | Handles incoming voice commands |
+
+## Step 1: Create `oacp.json`
+
+Place this in `app/src/main/assets/oacp.json`.
+
+For Flutter apps, place it in `android/app/src/main/assets/oacp.json` (NOT in Flutter's `assets/` folder).
+
+### Minimal example (one capability)
+
+```json
+{
+  "oacpVersion": "0.3",
+  "appId": "__APPLICATION_ID__",
+  "displayName": "My Flashlight",
+  "capabilities": [
+    {
+      "id": "flashlight_on",
+      "description": "Turn the device flashlight on.",
+      "aliases": ["turn on torch", "enable flashlight", "light on"],
+      "examples": ["turn on the flashlight", "I need a light"],
+      "keywords": ["flashlight", "torch", "light"],
+      "parameters": [],
+      "confirmation": "never",
+      "visibility": "public",
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_FLASHLIGHT_ON"
+        }
+      }
+    }
+  ]
+}
+```
+
+### Key fields
+
+| Field | What it does |
+|-------|-------------|
+| `appId` | Use `"__APPLICATION_ID__"` - replaced with real package name at runtime |
+| `invoke.android.type` | `"broadcast"` for background actions, `"activity"` for actions needing UI |
+| `aliases` | Alternate phrasings ("turn on torch", "enable flashlight") |
+| `examples` | Real user utterances ("I need a light") |
+| `keywords` | Ranking signals ("flashlight", "torch") |
+| `disambiguationHints` | Rules for choosing between similar actions |
+
+More metadata = better voice matching. A capability with 5 aliases and 5 examples resolves much more reliably than one with just a description.
+
+### Example with parameters
+
+```json
+{
+  "id": "set_alarm",
+  "description": "Set an alarm for a specific time.",
+  "aliases": ["create alarm", "wake me up"],
+  "examples": ["set an alarm for 7:30", "wake me up at 6 AM"],
+  "keywords": ["alarm", "wake", "timer"],
+  "parameters": [
+    {
+      "name": "hour",
+      "type": "integer",
+      "required": true,
+      "description": "Hour (0-23)",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "name": "minute",
+      "type": "integer",
+      "required": false,
+      "description": "Minute (0-59)",
+      "minimum": 0,
+      "maximum": 59,
+      "default": 0
+    }
+  ],
+  "invoke": {
+    "android": {
+      "type": "broadcast",
+      "action": "__APPLICATION_ID__.ACTION_SET_ALARM",
+      "extrasMapping": {
+        "hour": "__APPLICATION_ID__.EXTRA_HOUR",
+        "minute": "__APPLICATION_ID__.EXTRA_MINUTE"
+      }
+    }
+  }
+}
+```
+
+`extrasMapping` tells the assistant which Android Intent extra key to use for each parameter.
+
+## Step 2: Create `OACP.md`
+
+Place alongside `oacp.json` in the same assets directory. This gives the AI richer context about your app.
+
+```markdown
+# My Flashlight
+
+A simple flashlight app.
+
+## Capabilities
+
+- **flashlight_on**: Turns the device flashlight on. Use when the user
+  asks for light, torch, or flashlight.
+- **flashlight_off**: Turns the flashlight off.
+
+## Notes
+
+- If the user says "flashlight" without specifying on/off, default to on.
+```
+
+Keep it concise. Explain what your app does, list capabilities in plain English, and note any disambiguation rules.
+
+## Step 3: Add the ContentProvider
+
+This is how assistants discover your app. If you're using the [OACP Kotlin SDK](/docs/sdks/kotlin/quick-start), the `OacpProvider` is auto-registered via manifest merger - you can skip this step entirely.
+
+If you're not using the SDK (for example a pure Flutter or React Native project), you need a `ContentProvider` in native code:
+
+```kotlin
+package com.example.myapp.oacp
+
+import android.content.ContentProvider
+import android.content.ContentValues
+import android.content.res.AssetFileDescriptor
+import android.database.Cursor
+import android.net.Uri
+import android.os.ParcelFileDescriptor
+import java.io.FileNotFoundException
+
+class OacpMetadataProvider : ContentProvider() {
+    override fun onCreate(): Boolean = true
+
+    override fun getType(uri: Uri): String? = when (uri.pathSegments.firstOrNull()) {
+        "manifest" -> "application/json"
+        "context" -> "text/markdown"
+        else -> null
+    }
+
+    override fun query(uri: Uri, p: Array<out String>?, s: String?,
+        sa: Array<out String>?, so: String?): Cursor? = null
+    override fun insert(uri: Uri, values: ContentValues?): Uri? = null
+    override fun update(uri: Uri, values: ContentValues?,
+        s: String?, sa: Array<out String>?): Int = 0
+    override fun delete(uri: Uri, s: String?,
+        sa: Array<out String>?): Int = 0
+
+    override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor {
+        if (mode != "r") throw FileNotFoundException("Read-only")
+
+        val mimeType = getType(uri) ?: throw FileNotFoundException("Unknown URI: $uri")
+        val bytes = when (uri.pathSegments.firstOrNull()) {
+            "manifest" -> loadManifest()
+            "context" -> loadAsset("OACP.md")
+            else -> throw FileNotFoundException("Unknown URI: $uri")
+        }
+
+        return openPipeHelper(uri, mimeType, null, bytes) { output, _, _, _, data ->
+            ParcelFileDescriptor.AutoCloseOutputStream(output).use { it.write(data ?: ByteArray(0)) }
+        }
+    }
+
+    override fun openAssetFile(uri: Uri, mode: String): AssetFileDescriptor {
+        return AssetFileDescriptor(openFile(uri, mode), 0, AssetFileDescriptor.UNKNOWN_LENGTH)
+    }
+
+    private fun loadManifest(): ByteArray {
+        val ctx = context ?: throw FileNotFoundException("No context")
+        val raw = loadAsset("oacp.json").toString(Charsets.UTF_8)
+        return raw.replace("__APPLICATION_ID__", ctx.packageName).toByteArray(Charsets.UTF_8)
+    }
+
+    private fun loadAsset(path: String): ByteArray {
+        val ctx = context ?: throw FileNotFoundException("No context")
+        return ctx.assets.open(path).use { it.readBytes() }
+    }
+}
+```
+
+For Flutter apps, change the asset paths to `flutter_assets/assets/oacp.json` and `flutter_assets/assets/OACP.md`.
+
+## Step 4: Handle voice commands
+
+### Option A: Background action (OacpReceiver)
+
+Use for actions that don't need UI - toggling settings, querying data, etc. The SDK's `OacpReceiver` handles `goAsync()`, threading, result broadcasting, and error wrapping for you:
+
+```kotlin
+class MyOacpReceiver : OacpReceiver() {
+    override fun onAction(
+        context: Context,
+        action: String,
+        params: OacpParams,
+        requestId: String?
+    ): OacpResult? {
+        return when {
+            action.endsWith(".ACTION_FLASHLIGHT_ON") -> {
+                turnOnFlashlight(context)
+                OacpResult.success("Flashlight turned on")
+            }
+            action.endsWith(".ACTION_FLASHLIGHT_OFF") -> {
+                turnOffFlashlight(context)
+                OacpResult.success("Flashlight turned off")
+            }
+            else -> null
+        }
+    }
+}
+```
+
+**Why `endsWith` instead of exact match?** Because debug builds append `.debug` to the package name. Using `endsWith(".ACTION_FLASHLIGHT_ON")` works for both `com.example.app.ACTION_FLASHLIGHT_ON` and `com.example.app.debug.ACTION_FLASHLIGHT_ON`.
+
+### Option B: Foreground action (Activity)
+
+Use for actions that need visible UI - opening the camera, showing an article, etc.
+
+```kotlin
+class MyCameraActivity : OacpActivity() {
+    override fun onOacpAction(action: String, params: OacpParams) {
+        when {
+            action.endsWith(".ACTION_TAKE_PHOTO") -> {
+                setContentView(R.layout.camera)
+                // Set up camera in photo mode
+            }
+            action.endsWith(".ACTION_TAKE_SELFIE") -> {
+                setContentView(R.layout.camera)
+                // Set up camera in selfie mode, front camera
+            }
+        }
+    }
+
+    private fun onPhotoTaken(path: String) {
+        sendResult(OacpResult.success("Photo saved", mapOf("path" to path)))
+        finish()
+    }
+}
+```
+
+## Step 5: Register in AndroidManifest.xml
+
+```xml
+<!-- Background actions -->
+<receiver android:name=".oacp.MyOacpReceiver" android:exported="true">
+    <intent-filter>
+        <action android:name="${applicationId}.ACTION_FLASHLIGHT_ON" />
+        <action android:name="${applicationId}.ACTION_FLASHLIGHT_OFF" />
+    </intent-filter>
+</receiver>
+
+<!-- Foreground actions -->
+<activity android:name=".MyCameraActivity" android:exported="true">
+    <intent-filter>
+        <action android:name="${applicationId}.ACTION_TAKE_PHOTO" />
+        <category android:name="android.intent.category.DEFAULT" />
+    </intent-filter>
+</activity>
+```
+
+**Important:** All OACP components must have `android:exported="true"`. On Android 12+, this is required for components with intent filters.
+
+## Step 6: Test it with adb
+
+### Verify discovery
+
+```bash
+# Should print your oacp.json with the real package name
+adb shell content read --uri content://com.example.myapp.oacp/manifest
+
+# Should print your OACP.md
+adb shell content read --uri content://com.example.myapp.oacp/context
+```
+
+### Test actions
+
+```bash
+# Fire-and-forget action
+adb shell am broadcast \
+  -a com.example.myapp.ACTION_FLASHLIGHT_ON \
+  -p com.example.myapp
+
+# Action with parameters
+adb shell am broadcast \
+  -a com.example.myapp.ACTION_SET_ALARM \
+  --ei com.example.myapp.EXTRA_HOUR 7 \
+  --ei com.example.myapp.EXTRA_MINUTE 30 \
+  -p com.example.myapp
+
+# Foreground action
+adb shell am start \
+  -a com.example.myapp.ACTION_TAKE_PHOTO \
+  -p com.example.myapp
+```
+
+For debug builds, replace `com.example.myapp` with `com.example.myapp.debug`.
+
+## Common gotchas
+
+| Issue | Fix |
+|-------|-----|
+| Discovery not working | Authority must be exactly `${applicationId}.oacp` |
+| Actions not firing | Check `android:exported="true"` on receiver/activity |
+| Works in release but not debug | Use `endsWith()` for action matching, not exact strings |
+| Flutter asset not found | Put oacp.json in `android/app/src/main/assets/`, not Flutter's `assets/` |
+| Parameters are null | Check `extrasMapping` in oacp.json matches the extra keys you're reading |
+
+## Next steps
+
+- **[See the Android-native integration path](/docs/oacp/non-flutter-integration)** - if you want full control over the protocol layer
+- **[Use the OACP Kotlin SDK](/docs/sdks/kotlin/quick-start)** - skip the boilerplate
+- **[Meet Hark](/docs/hark/overview)** - the open-source assistant built on OACP

@@ -45,7 +45,7 @@ export function SearchResults({
             href={result.url}
             className="block p-2 border-b-1 border-b-gray-200 last:border-b-0 group"
           >
-            <h3 className="font-medium text-brand-primary group-hover:text-orange-400">
+            <h3 className="font-medium text-brand-primary group-hover:text-brand-primary-hover">
               {result.title}
             </h3>
             <p
@@ -68,7 +68,7 @@ export function SearchResults({
         data-testid="search-results-container"
       >
         <div
-          className="py-2 px-4 text-md font-inter font-semibold text-gray-500 text-bold"
+          className="py-2 px-4 text-md font-inter font-semibold text-neutral-text-secondary text-bold"
           data-testid="no-results-message"
         >
           No Llamas Found...

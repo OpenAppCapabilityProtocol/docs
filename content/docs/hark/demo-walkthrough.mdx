@@ -1,0 +1,86 @@
+---
+title: OACP Test App Demo
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+This document describes the OACP test app demo and how to use it to verify both foreground and background OACP flows on Android.
+
+## What the test app covers
+
+The test app shipped in the OACP repo is intentionally small. It exists to exercise the protocol clearly:
+
+- foreground counter actions
+- background queries
+- parameter extraction
+- async results
+- confirmation for destructive actions
+
+The full example lives in [`examples/example_oacp_test`](https://github.com/OpenAppCapabilityProtocol/oacp/tree/main/examples/example_oacp_test).
+
+## Actions in the demo
+
+The app exposes a mix of actions:
+
+- `increment_counter`
+- `decrement_counter`
+- `set_counter`
+- `reset_counter`
+- `get_counter`
+- `get_battery_status`
+
+That gives you one small app that demonstrates both major invocation styles.
+
+## Why this demo is useful
+
+Unlike a richer app demo, the test app is easy to reason about:
+
+- counter updates show foreground Activity dispatch
+- reads like `get_counter` show background broadcast dispatch
+- battery and counter reads show async result handling
+- reset shows confirmation semantics
+
+## End-to-end flow
+
+1. Hark discovers the test app through its exported `.oacp` provider.
+2. Hark reads `oacp.json` and `OACP.md`.
+3. The local pipeline resolves the spoken command to one of the demo actions.
+4. Hark dispatches either:
+   - an **Activity** intent for counter-changing foreground actions
+   - a **BroadcastReceiver** intent for background-safe reads
+5. The app handles the action and, when needed, sends a result back on `org.oacp.ACTION_RESULT`.
+
+## Build and install
+
+From the OACP repo:
+
+```bash
+# Clone from https://github.com/OpenAppCapabilityProtocol/oacp
+cd oacp/examples/example_oacp_test
+./gradlew installDebug
+```
+
+## Test commands
+
+After installing the demo app and refreshing Hark discovery, try:
+
+- "Increment counter"
+- "Add 5 to the counter"
+- "Set counter to 42"
+- "Reset counter"
+- "What's the counter at?"
+- "Check battery"
+
+## Expected behavior
+
+- Foreground counter actions open the test app and update the UI.
+- Background reads can return results without opening the app.
+- Reset asks for confirmation before clearing the counter.
+- Async results show up inside Hark after dispatch.
+
+## Debugging notes
+
+- If discovery fails, verify the authority is exactly `${applicationId}.oacp`.
+- If a foreground action does not open the app, verify the activity intent filter is exported and matches the action name.
+- If a background read does not answer, verify the receiver is registered and the result broadcast includes the request id.
+- If Hark picks the wrong action, inspect the demo manifest and examples to confirm the installed build is the latest one.

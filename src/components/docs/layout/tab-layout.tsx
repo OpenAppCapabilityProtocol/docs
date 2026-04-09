@@ -34,7 +34,7 @@ export const TabsLayout = ({
     FormattedNavigation | undefined
   >();
   const [tabs, setTabs] = React.useState<TabItem[]>([]);
-  const [selectedTab, setSelectedTab] = React.useState<string | undefined>();
+  const [selectedTab, setSelectedTab] = React.useState("");
   const [objectOfSelectedTab, setObjectOfSelectedTab] = React.useState<
     TabItem | undefined
   >();
@@ -52,7 +52,7 @@ export const TabsLayout = ({
       __typename: tab.__typename,
     }));
     setTabs(tabs);
-    setSelectedTab(tabs[0]?.label);
+    setSelectedTab(tabs[0]?.label ?? "");
     setObjectOfSelectedTab(tabs[0]);
   }, [tinaProps.data]);
 
@@ -61,7 +61,7 @@ export const TabsLayout = ({
     if (!tabs.length || !pathname) return;
 
     const initialTab = findTabWithPath(tabs, pathname);
-    setSelectedTab(initialTab);
+    setSelectedTab(initialTab ?? tabs[0]?.label ?? "");
     // Dispatch initial tab change with index
     const initialIndex = tabs.findIndex((tab) => tab.label === initialTab);
     window.dispatchEvent(

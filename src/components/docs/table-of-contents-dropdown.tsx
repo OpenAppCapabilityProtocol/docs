@@ -17,14 +17,14 @@ const TableOfContentsItems = ({ tocData }) => {
   };
 
   return (
-    <div className="animate-fade-down animate-duration-300 absolute z-10 mt-4 max-h-96 w-full overflow-y-scroll rounded-lg bg-white p-6 shadow-lg">
+    <div className="animate-fade-down animate-duration-300 absolute z-10 mt-4 max-h-96 w-full overflow-y-scroll rounded-lg border border-neutral-border bg-neutral-background p-6 shadow-lg">
       {tocData?.map((item) => (
         <div
           className="flex gap-2 font-light group"
           key={getIdSyntax(item.text)}
         >
           <div
-            className={`border-r border-1 border-gray-200 group-hover:border-neutral-500
+            className={`border-r border-1 border-neutral-border-subtle group-hover:border-brand-primary
             `}
           />
           <a
@@ -32,7 +32,7 @@ const TableOfContentsItems = ({ tocData }) => {
             onClick={(e) => handleLinkClick(e, getIdSyntax(item.text))}
             className={`${
               item.type === "h3" ? "pl-4" : "pl-2"
-            } py-1.5 text-gray-400 group-hover:text-black`}
+            } py-1.5 text-neutral-text-secondary group-hover:text-brand-primary`}
           >
             {item.text}
           </a>

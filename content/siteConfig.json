@@ -1,17 +1,17 @@
 {
-  "title": "Tina",
-  "sidebarTitle": "Tina",
-  "seoDefaultTitle": "TinaCMS – Headless CMS with GitHub & Markdown Support",
-  "description": "TinaCMS is a fully open-source headless CMS that supports Git",
-  "siteUrl": "https://tina.io",
-  "roadmapUrl": "https://tina.io/roadmap/",
-  "licenseUrl": "https://github.com/tinacms/tinacms/blob/master/LICENSE",
-  "keywords": "nextjs, react, cms, next, tina, markdown, git, open-source, headless",
+  "title": "Hark & OACP",
+  "sidebarTitle": "Hark & OACP",
+  "seoDefaultTitle": "Hark & OACP - Open App Capability Protocol",
+  "description": "Documentation for OACP, the OACP Android SDK, and Hark, the open-source on-device voice assistant.",
+  "siteUrl": "",
+  "roadmapUrl": "https://github.com/OpenAppCapabilityProtocol/hark/blob/main/ROADMAP.md",
+  "licenseUrl": "https://github.com/OpenAppCapabilityProtocol/oacp/blob/main/LICENSE",
+  "keywords": "oacp, hark, android, voice assistant, on-device ai, open protocol, app capabilities, flutter, kotlin",
   "docsHomepage": "/docs/index",
   "social": {
-    "twitterHandle": "@tinacms",
-    "twitter": "https://twitter.com/tinacms",
-    "github": "https://github.com/tinacms/tinacms",
-    "forum": "https://tina.io/community"
+    "twitterHandle": "@OpenAppCapProto",
+    "twitter": "https://github.com/OpenAppCapabilityProtocol",
+    "github": "https://github.com/OpenAppCapabilityProtocol",
+    "forum": "https://github.com/OpenAppCapabilityProtocol/oacp/discussions"
   }
 }

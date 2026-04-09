@@ -10,17 +10,17 @@ interface DefaultProps {
 
 export const getSeo = (seo: any, data?: DefaultProps): Metadata => {
   const excerpt = data ? formatExcerpt(data.body, 140) : "";
+  const canonical = envUrl(seo?.canonicalUrl);
+  const description = seo?.description || excerpt || DEFAULT_SEO.description;
 
   const SEO = {
-    title: seo?.title || `${data?.pageTitle} | TinaCMS`,
-    description: seo?.description || `${excerpt}`,
-    alternates: {
-      canonical: envUrl(seo?.canonicalUrl),
-    },
+    title: seo?.title || `${data?.pageTitle} | Hark & OACP`,
+    description,
+    ...(canonical ? { alternates: { canonical } } : {}),
     openGraph: {
-      title: seo?.title || `${data?.pageTitle} | TinaCMS`,
-      url: envUrl(seo?.canonicalUrl),
-      description: seo?.description || `${excerpt}`,
+      title: seo?.title || `${data?.pageTitle} | Hark & OACP`,
+      ...(canonical ? { url: canonical } : {}),
+      description,
       images: [
         {
           ...DEFAULT_SEO.openGraph?.images?.[0],

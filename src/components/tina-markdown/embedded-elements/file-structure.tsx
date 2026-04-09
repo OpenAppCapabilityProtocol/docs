@@ -118,9 +118,9 @@ const FileTreeItem = ({
         <div className="flex-shrink-0">
           {node.type === "folder" ? (
             isExpanded ? (
-              <FolderOpenIcon className="h-4 w-4 text-blue-500" />
+              <FolderOpenIcon className="h-4 w-4 text-brand-primary" />
             ) : (
-              <FolderIcon className="h-4 w-4 text-blue-500" />
+              <FolderIcon className="h-4 w-4 text-brand-primary" />
             )
           ) : (
             <DocumentIcon className="h-4 w-4 text-neutral-text-secondary" />

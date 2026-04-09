@@ -4,49 +4,9 @@ import { wrapFieldsWithMeta } from "tinacms";
 // Theme definitions with their color palettes
 const themes = [
   {
-    value: "default",
-    label: "Default",
-    description: "Clean monochrome design",
-    colors: {
-      primary: "#0f172a",
-      secondary: "#64748b",
-      accent: "#e2e8f0",
-    },
-  },
-  {
-    value: "tina",
-    label: "Tina",
-    description: "TinaCMS-inspired orange & blue",
-    colors: {
-      primary: "#EC4815",
-      secondary: "#0084FF",
-      accent: "#93E9BE",
-    },
-  },
-  {
-    value: "blossom",
-    label: "Blossom",
-    description: "Elegant pink & rose tones",
-    colors: {
-      primary: "#e54666",
-      secondary: "#dc3b5d",
-      accent: "#ffcdcf",
-    },
-  },
-  {
-    value: "lake",
-    label: "Lake",
-    description: "Professional blue palette",
-    colors: {
-      primary: "#0090FF",
-      secondary: "#3b82f6",
-      accent: "#bfdbfe",
-    },
-  },
-  {
     value: "pine",
     label: "Pine",
-    description: "Natural green tones",
+    description: "Natural green tones across the full docs site",
     colors: {
       primary: "#30A46C",
       secondary: "#5bb98c",
@@ -54,13 +14,13 @@ const themes = [
     },
   },
   {
-    value: "indigo",
-    label: "Indigo",
-    description: "Modern purple & violet",
+    value: "hark",
+    label: "Hark",
+    description: "Hark green primary with OACP orange accents",
     colors: {
-      primary: "#6E56CF",
-      secondary: "#b197fc",
-      accent: "#e1d9ff",
+      primary: "#30A46C",
+      secondary: "#e9a215",
+      accent: "#f8ddad",
     },
   },
 ];
@@ -87,8 +47,8 @@ const ThemeOption: FC<ThemeOptionProps> = ({ theme, isSelected, onClick }) => {
         relative p-4 rounded-lg border cursor-pointer transition-all duration-200 bg-white max-w-sm hover:shadow-md
         ${
           isSelected
-            ? "border-blue-500 shadow-md"
-            : "border-gray-200 hover:border-gray-300 shadow-sm"
+            ? "border-brand-primary shadow-md"
+            : "border-neutral-border-subtle hover:border-neutral-border shadow-sm"
         }
       `}
       onClick={onClick}
@@ -96,17 +56,17 @@ const ThemeOption: FC<ThemeOptionProps> = ({ theme, isSelected, onClick }) => {
       {/* Color palette preview */}
       <div className="flex space-x-2 mb-3">
         <div
-          className="w-6 h-6 rounded-full border border-gray-200 shadow-sm"
+          className="w-6 h-6 rounded-full border border-neutral-border-subtle shadow-sm"
           style={{ backgroundColor: theme.colors.primary }}
           title={`Primary: ${theme.colors.primary}`}
         />
         <div
-          className="w-6 h-6 rounded-full border border-gray-200 shadow-sm"
+          className="w-6 h-6 rounded-full border border-neutral-border-subtle shadow-sm"
           style={{ backgroundColor: theme.colors.secondary }}
           title={`Secondary: ${theme.colors.secondary}`}
         />
         <div
-          className="w-6 h-6 rounded-full border border-gray-200 shadow-sm"
+          className="w-6 h-6 rounded-full border border-neutral-border-subtle shadow-sm"
           style={{ backgroundColor: theme.colors.accent }}
           title={`Accent: ${theme.colors.accent}`}
         />
@@ -114,14 +74,18 @@ const ThemeOption: FC<ThemeOptionProps> = ({ theme, isSelected, onClick }) => {
 
       {/* Theme info */}
       <div>
-        <div className="font-semibold text-gray-800 mb-1">{theme.label}</div>
-        <div className="text-sm text-gray-600">{theme.description}</div>
+        <div className="font-semibold text-neutral-text mb-1">
+          {theme.label}
+        </div>
+        <div className="text-sm text-neutral-text-secondary">
+          {theme.description}
+        </div>
       </div>
 
       {/* Selection indicator */}
       {isSelected && (
         <div className="absolute top-2 right-2">
-          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+          <div className="w-5 h-5 bg-brand-primary rounded-full flex items-center justify-center">
             <svg
               className="w-3 h-3 text-white"
               fill="currentColor"
@@ -141,7 +105,7 @@ const ThemeOption: FC<ThemeOptionProps> = ({ theme, isSelected, onClick }) => {
 };
 
 export const ThemeSelector = wrapFieldsWithMeta(({ input, field }) => {
-  const currentValue = input.value || "default";
+  const currentValue = input.value || "pine";
 
   const handleThemeChange = (themeValue: string) => {
     input.onChange(themeValue);
@@ -161,21 +125,21 @@ export const ThemeSelector = wrapFieldsWithMeta(({ input, field }) => {
       </div>
 
       {/* Current selection display */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-md">
-        <div className="text-sm text-gray-600">
+      <div className="mt-4 p-3 bg-neutral-background-secondary rounded-md">
+        <div className="text-sm text-neutral-text-secondary">
           Current theme:{" "}
-          <span className="font-semibold text-gray-800">
+          <span className="font-semibold text-neutral-text">
             {themes.find((t) => t.value === currentValue)?.label ||
               currentValue}
           </span>
         </div>
       </div>
       {/* Instructions for custom themes */}
-      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-wrap">
+      <div className="mb-6 p-4 bg-neutral-background-secondary border border-neutral-border rounded-lg text-wrap">
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
             <svg
-              className="w-5 h-5 text-blue-600"
+              className="w-5 h-5 text-brand-primary"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -187,33 +151,24 @@ export const ThemeSelector = wrapFieldsWithMeta(({ input, field }) => {
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-blue-800 mb-1">
-              Want to create a custom theme?
+            <h3 className="text-sm font-semibold text-neutral-text mb-1">
+              Want to tweak these themes?
             </h3>
-            <p className="text-sm text-blue-700 mb-2">
-              You can create your own custom themes by modifying the CSS
-              variables in the global stylesheet. See the{" "}
-              <a
-                href="https://github.com/tinacms/tina-docs#custom-theming"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline font-medium"
-              >
-                Custom Theming section in the README
-              </a>{" "}
-              for detailed instructions on how to create new themes.
+            <p className="text-sm text-neutral-text-secondary mb-2">
+              Keep the public site on `pine` or `hark`. If you need to adjust
+              either one, update the theme tokens in the files below.
             </p>
-            <div className="text-xs text-blue-600">
+            <div className="text-xs text-neutral-text-secondary">
               <strong>Files to modify:</strong>{" "}
-              <code className="bg-blue-100 px-1 rounded">
+              <code className="bg-neutral-surface px-1 rounded">
                 src/styles/global.css
               </code>
               ,
-              <code className="bg-blue-100 px-1 rounded">
+              <code className="bg-neutral-surface px-1 rounded">
                 tina/customFields/theme-selector.tsx
               </code>
               , and
-              <code className="bg-blue-100 px-1 rounded">
+              <code className="bg-neutral-surface px-1 rounded">
                 src/components/ui/theme-selector.tsx
               </code>
             </div>

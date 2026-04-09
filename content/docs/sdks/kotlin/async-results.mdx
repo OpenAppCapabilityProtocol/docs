@@ -1,0 +1,72 @@
+---
+title: Async Results
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+For long-running operations - weather lookups, database queries, network fetches - return results asynchronously. The SDK handles all the boilerplate.
+
+## In `oacp.json`
+
+```json
+{
+  "id": "get_weather",
+  "completionMode": "async_result",
+  "resultTransport": {
+    "android": { "type": "broadcast", "action": "org.oacp.ACTION_RESULT" }
+  }
+}
+```
+
+## In your receiver
+
+```kotlin
+override fun onAction(context: Context, action: String, params: OacpParams, requestId: String?): OacpResult? {
+    // Start background work
+    fetchWeatherAsync { weather ->
+        OacpResult.success(
+            "Currently ${weather.temp}°C and ${weather.condition}",
+            mapOf("temperature" to weather.temp, "condition" to weather.condition)
+        ).send(context, requestId!!, "get_weather")
+    }
+
+    // Acknowledge immediately
+    return OacpResult.accepted("Checking the weather...")
+}
+```
+
+The assistant receives both the acknowledgment and the final result, keeping the user informed.
+
+## The simpler pattern
+
+For work that's fast enough to run on a background thread - database queries, SharedPreferences reads, local computation - just return the `OacpResult` directly:
+
+```kotlin
+class WeatherReceiver : OacpReceiver() {
+    override fun onAction(
+        context: Context,
+        action: String,
+        params: OacpParams,
+        requestId: String?
+    ): OacpResult? {
+        return when {
+            action.endsWith(".ACTION_GET_WEATHER") -> {
+                val temp = fetchTemperature() // safe to block - runs on background thread
+                OacpResult.success(
+                    "Currently ${temp}° and partly cloudy",
+                    mapOf("temperature" to temp, "unit" to "celsius")
+                )
+            }
+            else -> null
+        }
+    }
+}
+```
+
+`OacpReceiver` automatically:
+
+- Runs your code on a background thread
+- Catches exceptions and returns `ERROR_INTERNAL`
+- Broadcasts the result back to the assistant using the `requestId`
+
+The assistant speaks the `message` to the user and can use the structured `data` map for follow-up reasoning.

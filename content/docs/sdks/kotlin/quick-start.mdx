@@ -1,0 +1,112 @@
+---
+title: Quick Start
+last_edited: '2026-04-09T00:00:00.000Z'
+tocIsHidden: false
+---
+
+**Add OACP to an Android app with one dependency, two asset files, and one receiver.**
+
+`oacp-android` is the Android SDK for the [Open App Capability Protocol](/docs/oacp/what-is-oacp). It gives you the provider, parameter parsing, and result helpers so you only need to implement your app logic.
+
+> MCP gave AI agents tools on servers. OACP gives AI assistants capabilities inside mobile apps.
+
+## 1. Add the dependency
+
+Use the local AAR for now. The planned Maven coordinates exist in the SDK README, but Maven Central publishing is not the installed path today.
+
+Download `oacp-android-release.aar` from the [latest release](https://github.com/OpenAppCapabilityProtocol/oacp-android-sdk/releases), copy it to `app/libs/`, then:
+
+```kotlin
+// app/build.gradle.kts
+dependencies {
+    implementation(files("libs/oacp-android-release.aar"))
+    implementation("androidx.annotation:annotation:1.7.1")
+}
+```
+
+## 2. Create `assets/oacp.json`
+
+Declare the action your app exposes:
+
+```json
+{
+  "oacpVersion": "0.3",
+  "appId": "__APPLICATION_ID__",
+  "displayName": "My App",
+  "capabilities": [
+    {
+      "id": "do_thing",
+      "description": "Does the thing when the user asks",
+      "parameters": [],
+      "confirmation": "never",
+      "visibility": "public",
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_DO_THING"
+        }
+      }
+    }
+  ]
+}
+```
+
+## 3. Create `assets/OACP.md`
+
+Add short semantic context:
+
+```markdown
+# My App - OACP Context
+
+## What this app does
+My App does the thing. Users typically say "do the thing" or "make it happen."
+
+## Disambiguation
+- "do the thing" → do_thing
+- "make it happen" → do_thing
+```
+
+## 4. Handle the action and register the receiver
+
+```kotlin
+class MyReceiver : OacpReceiver() {
+    override fun onAction(
+        context: Context,
+        action: String,
+        params: OacpParams,
+        requestId: String?
+    ): OacpResult? {
+        return when {
+            action.endsWith(".ACTION_DO_THING") -> {
+                doTheThing()
+                OacpResult.success("Done!")
+            }
+            else -> null
+        }
+    }
+}
+```
+
+```xml
+<receiver android:name=".MyReceiver" android:exported="true">
+    <intent-filter>
+        <action android:name="${applicationId}.ACTION_DO_THING" />
+    </intent-filter>
+</receiver>
+```
+
+The SDK auto-registers the `ContentProvider` via manifest merger. Once the receiver is in place, the app is discoverable by [Hark](/docs/hark/overview) and other OACP-compatible assistants.
+
+## 5. Verify with `adb`
+
+You can test the action before installing an assistant:
+
+```bash
+adb shell am broadcast -a com.example.myapp.ACTION_DO_THING
+```
+
+## Requirements
+
+- Android `minSdk` 21+
+- Kotlin or Java
+- Android app module with access to `assets/` and `AndroidManifest.xml`
