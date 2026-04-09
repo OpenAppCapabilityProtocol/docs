@@ -26,9 +26,7 @@ export function SearchResults({
         className={searchResultsContainer}
         data-testid="search-results-container"
       >
-        <h4 className="text-brand-primary font-bold my-2">
-          Mustering all the Llamas...
-        </h4>
+        <h4 className="text-brand-primary font-bold my-2">Searching docs...</h4>
       </div>
     );
   }
@@ -71,7 +69,7 @@ export function SearchResults({
           className="py-2 px-4 text-md font-inter font-semibold text-neutral-text-secondary text-bold"
           data-testid="no-results-message"
         >
-          No Llamas Found...
+          No matching docs found.
         </div>
       </div>
     );

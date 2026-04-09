@@ -5,11 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { SearchResults } from "./search-results";
 
 const isDev = process.env.NODE_ENV === "development";
-// In development, the pagefind-entry.json is served from the root of the project.
-// In production, it is served from the _next/static/pagefind directory.
-const pagefindPath = isDev
-  ? "/pagefind"
-  : `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/_next/static/pagefind`;
+const configuredPagefindPath = process.env.NEXT_PUBLIC_PAGEFIND_PATH;
+const pagefindPath =
+  configuredPagefindPath ||
+  (isDev
+    ? "/pagefind"
+    : `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/_next/static/pagefind`);
 
 export function Search({ className }: { className?: string }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,7 +63,7 @@ export function Search({ className }: { className?: string }) {
           );
         } catch (importError) {
           setError(
-            "Unable to load search functionality. For more information, please check this README: https://github.com/tinacms/tina-docs?tab=readme-ov-file#search-functionality and refresh the page."
+            "Unable to load search right now. Rebuild the Pagefind index and refresh the page."
           );
           return;
         }
