@@ -9,6 +9,7 @@
           "title": "Introduction",
           "items": [
             {
+              "title": "Documentation",
               "slug": "content/docs/index.mdx",
               "_template": "item"
             }
@@ -18,18 +19,22 @@
           "title": "OACP Protocol",
           "items": [
             {
+              "title": "What is OACP?",
               "slug": "content/docs/oacp/what-is-oacp.mdx",
               "_template": "item"
             },
             {
+              "title": "How OACP Works",
               "slug": "content/docs/oacp/how-it-works.mdx",
               "_template": "item"
             },
             {
+              "title": "Getting Started",
               "slug": "content/docs/oacp/getting-started.mdx",
               "_template": "item"
             },
             {
+              "title": "OACP Integration",
               "slug": "content/docs/oacp/non-flutter-integration.mdx",
               "_template": "item"
             }
@@ -39,14 +44,17 @@
           "title": "Hark",
           "items": [
             {
+              "title": "Hark Overview",
               "slug": "content/docs/hark/overview.mdx",
               "_template": "item"
             },
             {
+              "title": "Architecture",
               "slug": "content/docs/hark/architecture.mdx",
               "_template": "item"
             },
             {
+              "title": "OACP Test App Demo",
               "slug": "content/docs/hark/demo-walkthrough.mdx",
               "_template": "item"
             }
@@ -59,18 +67,22 @@
               "title": "Kotlin SDK",
               "items": [
                 {
+                  "title": "Quick Start",
                   "slug": "content/docs/sdks/kotlin/quick-start.mdx",
                   "_template": "item"
                 },
                 {
+                  "title": "Core Components",
                   "slug": "content/docs/sdks/kotlin/core-components.mdx",
                   "_template": "item"
                 },
                 {
+                  "title": "Async Results",
                   "slug": "content/docs/sdks/kotlin/async-results.mdx",
                   "_template": "item"
                 },
                 {
+                  "title": "API Reference",
                   "slug": "content/docs/sdks/kotlin/api-reference.mdx",
                   "_template": "item"
                 }
@@ -81,6 +93,7 @@
               "title": "Flutter SDK (under development)",
               "items": [
                 {
+                  "title": "Under development",
                   "slug": "content/docs/sdks/flutter/overview.mdx",
                   "_template": "item"
                 }
@@ -91,6 +104,7 @@
               "title": "React Native SDK (under development)",
               "items": [
                 {
+                  "title": "Under development",
                   "slug": "content/docs/sdks/react-native/overview.mdx",
                   "_template": "item"
                 }
@@ -103,6 +117,7 @@
           "title": "Roadmap",
           "items": [
             {
+              "title": "Roadmap",
               "slug": "content/docs/roadmap.mdx",
               "_template": "item"
             }

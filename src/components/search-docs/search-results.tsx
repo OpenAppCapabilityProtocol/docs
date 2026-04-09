@@ -4,21 +4,24 @@ interface SearchResult {
   url: string;
   title: string;
   excerpt: string;
+  sectionPath: string[];
 }
 
 interface SearchResultsProps {
   results: SearchResult[];
   isLoading: boolean;
   searchTerm: string;
+  onSelect?: () => void;
 }
 
 const searchResultsContainer =
-  "absolute mt-2 p-4 z-10 py-2 max-h-[45vh] md:w-11/12 w-full mx-auto rounded-lg shadow-lg md:ml-2 left translate-x-1 overflow-y-auto bg-neutral-background";
+  "rounded-2xl bg-neutral-surface/35 p-1 dark:bg-neutral-surface/20";
 
 export function SearchResults({
   results,
   isLoading,
   searchTerm,
+  onSelect,
 }: SearchResultsProps) {
   if (isLoading) {
     return (
@@ -26,7 +29,9 @@ export function SearchResults({
         className={searchResultsContainer}
         data-testid="search-results-container"
       >
-        <h4 className="text-brand-primary font-bold my-2">Searching docs...</h4>
+        <h4 className="px-3 py-4 text-sm font-semibold text-brand-primary">
+          Searching docs...
+        </h4>
       </div>
     );
   }
@@ -41,13 +46,19 @@ export function SearchResults({
           <Link
             key={index}
             href={result.url}
-            className="block p-2 border-b-1 border-b-gray-200 last:border-b-0 group"
+            className="group block rounded-xl px-3 py-3 transition hover:bg-brand-primary/8"
+            onClick={onSelect}
           >
+            {result.sectionPath.length > 0 && (
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-text-secondary">
+                {result.sectionPath.join(" / ")}
+              </p>
+            )}
             <h3 className="font-medium text-brand-primary group-hover:text-brand-primary-hover">
               {result.title}
             </h3>
             <p
-              className="mt-1 text-sm text-neutral-text"
+              className="mt-1 text-sm text-neutral-text-secondary"
               // biome-ignore lint/security/noDangerouslySetInnerHtml: For Highlighting the search term, it is important to use dangerouslySetInnerHTML
               dangerouslySetInnerHTML={{
                 __html: result.excerpt || "",
@@ -66,7 +77,7 @@ export function SearchResults({
         data-testid="search-results-container"
       >
         <div
-          className="py-2 px-4 text-md font-inter font-semibold text-neutral-text-secondary text-bold"
+          className="px-3 py-4 text-sm font-semibold text-neutral-text-secondary"
           data-testid="no-results-message"
         >
           No matching docs found.

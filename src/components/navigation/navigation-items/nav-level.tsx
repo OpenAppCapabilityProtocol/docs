@@ -24,9 +24,34 @@ const getEndpointSlug = (endpoint_slug: string | string[] | undefined) => {
   if (typeof endpoint_slug === "string") {
     return titleCase(endpoint_slug?.replace(/-/g, " "));
   }
-  return endpoint_slug.length === 1
-    ? titleCase(endpoint_slug[0]?.replace(/-/g, " "))
+  const validSlugs = endpoint_slug.filter(
+    (slug): slug is string => typeof slug === "string" && slug.length > 0
+  );
+  return validSlugs.length === 1
+    ? titleCase(validSlugs[0].replace(/-/g, " "))
     : "";
+};
+
+const formatAcronyms = (value: string) =>
+  value
+    .replace(/\bOacp\b/g, "OACP")
+    .replace(/\bSdk\b/g, "SDK")
+    .replace(/\bApi\b/g, "API")
+    .replace(/\bLlm\b/g, "LLM")
+    .replace(/\bNlu\b/g, "NLU");
+
+const getSlugTitle = (slug: unknown) => {
+  if (typeof slug !== "string" || slug.length === 0) return "";
+
+  const normalizedSlug = getUrl(slug).replace(/\/$/, "");
+  if (normalizedSlug === "/docs") {
+    return "Documentation";
+  }
+
+  const lastSegment = normalizedSlug.split("/").filter(Boolean).pop();
+  if (!lastSegment) return "";
+
+  return formatAcronyms(titleCase(lastSegment.replace(/-/g, " ")));
 };
 
 export const NavLevel: React.FC<NavLevelProps> = ({
@@ -43,6 +68,7 @@ export const NavLevel: React.FC<NavLevelProps> = ({
   // If there is only one endpoint slug, use it as the default title
   // This will be used only when endpoint title is not set
   const defaultTitle = getEndpointSlug(endpoint_slug);
+  const fallbackSlugTitle = getSlugTitle(categoryData.slug);
   const slug = getUrl(categoryData.slug).replace(/\/$/, "");
   const [expanded, setExpanded] = React.useState(
     matchActualTarget(slug || getUrl(categoryData.href), path) ||
@@ -181,6 +207,7 @@ export const NavLevel: React.FC<NavLevelProps> = ({
                 >
                   {categoryData.slug.title ||
                     categoryData.title ||
+                    fallbackSlugTitle ||
                     defaultTitle}
                 </span>
                 <ChevronRightIcon className="ml-2 flex-shrink-0 opacity-0 w-5 h-auto" />
