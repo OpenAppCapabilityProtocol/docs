@@ -27,6 +27,7 @@ interface CopyPageDropdownProps {
 export const CopyPageDropdown: React.FC<CopyPageDropdownProps> = ({
   title = "Documentation Page",
 }) => {
+  const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
   const [copied, setCopied] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [markdownUrl, setMarkdownUrl] = useState<string | null>(null);
@@ -177,42 +178,46 @@ export const CopyPageDropdown: React.FC<CopyPageDropdownProps> = ({
               description: "Copy page as Markdown for LLMs",
               onClick: handleCopyPage,
             },
-            {
-              icon: (
-                <MdFilePresent className="w-4 h-4 text-neutral-text-secondary" />
-              ),
-              label: "View as Markdown",
-              description: "View this page as plain text",
-              onClick: handleViewMarkdown,
-            },
-            {
-              icon: (
-                <SiOpenai className="w-4 h-4 text-neutral-text-secondary" />
-              ),
-              label: "Open in ChatGPT",
-              description: "Ask questions about this page",
-              onClick: () =>
-                openInLLM(
-                  (url) =>
-                    `https://chat.openai.com/?hints=search&q=Read%20from%20${encodeURIComponent(
-                      url
-                    )}%20so%20I%20can%20ask%20questions%20about%20it.`
-                ),
-            },
-            {
-              icon: (
-                <FaCommentDots className="w-4 h-4 text-neutral-text-secondary" />
-              ),
-              label: "Open in Claude",
-              description: "Ask questions about this page",
-              onClick: () =>
-                openInLLM(
-                  (url) =>
-                    `https://claude.ai/?q=Read%20from%20${encodeURIComponent(
-                      url
-                    )}%20so%20I%20can%20ask%20questions%20about%20it.`
-                ),
-            },
+            ...(!isStaticExport
+              ? [
+                  {
+                    icon: (
+                      <MdFilePresent className="w-4 h-4 text-neutral-text-secondary" />
+                    ),
+                    label: "View as Markdown",
+                    description: "View this page as plain text",
+                    onClick: handleViewMarkdown,
+                  },
+                  {
+                    icon: (
+                      <SiOpenai className="w-4 h-4 text-neutral-text-secondary" />
+                    ),
+                    label: "Open in ChatGPT",
+                    description: "Ask questions about this page",
+                    onClick: () =>
+                      openInLLM(
+                        (url) =>
+                          `https://chat.openai.com/?hints=search&q=Read%20from%20${encodeURIComponent(
+                            url
+                          )}%20so%20I%20can%20ask%20questions%20about%20it.`
+                      ),
+                  },
+                  {
+                    icon: (
+                      <FaCommentDots className="w-4 h-4 text-neutral-text-secondary" />
+                    ),
+                    label: "Open in Claude",
+                    description: "Ask questions about this page",
+                    onClick: () =>
+                      openInLLM(
+                        (url) =>
+                          `https://claude.ai/?q=Read%20from%20${encodeURIComponent(
+                            url
+                          )}%20so%20I%20can%20ask%20questions%20about%20it.`
+                      ),
+                  },
+                ]
+              : []),
           ].map(({ icon, label, description, onClick }) => (
             <DropdownMenuItem
               key={label}
