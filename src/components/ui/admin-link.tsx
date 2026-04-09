@@ -3,19 +3,18 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import { useEffect } from "react";
-import { useEditState } from "tinacms/dist/react";
 
 const AdminLink = () => {
-  const { edit } = useEditState();
   const [showAdminLink, setShowAdminLink] = React.useState(false);
 
   useEffect(() => {
     setShowAdminLink(
-      !edit &&
+      Boolean(
         JSON.parse((window.localStorage.getItem("tinacms-auth") as any) || "{}")
           ?.access_token
+      )
     );
-  }, [edit]);
+  }, []);
 
   const handleDismiss = () => {
     setShowAdminLink(false);
