@@ -1,32 +1,38 @@
-name: Lint and Check
+name: Build Static Docs
 
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  lint-and-check:
-    name: Run Biome Lint and Check
+  build-static-site:
+    name: Verify Cloudflare Static Build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10.11.1
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Biome Lint & Formatter
+      - name: Lint
         run: pnpm lint
+
+      - name: Verify Cloudflare build
+        run: pnpm build:cloudflare
