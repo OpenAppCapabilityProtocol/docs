@@ -7,6 +7,7 @@ export const config = defineConfig({
   clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID,
   branch:
     process.env.NEXT_PUBLIC_TINA_BRANCH || // custom branch env override
+    process.env.CF_PAGES_BRANCH || // Cloudflare Pages branch env
     process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF || // Vercel branch env
     process.env.HEAD, // Netlify branch env
   token: process.env.TINA_TOKEN,
