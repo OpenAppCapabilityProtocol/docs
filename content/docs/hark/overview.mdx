@@ -39,6 +39,16 @@ The shipped local pipeline has two stages:
 
 This keeps the matching step cheap and only sends the selected action schema to the generative model. For the full reasoning, see [NLU architecture](/docs/hark/nlu-architecture).
 
+## Assistant overlay
+
+Long-pressing the home button launches a lightweight overlay panel that floats on top of whatever app you are using. This is the fastest way to interact with Hark because the overlay loads zero AI models on its own. It is a thin UI shell: instant startup, no lag.
+
+Under the hood, Hark uses `FlutterEngineGroup` to spin up two Flutter engines. The main engine runs the heavy lifting (STT, NLU, TTS, model inference). The overlay engine only renders the chat UI. State is relayed between the two engines through a Pigeon-generated bridge that passes through the native `OverlayActivity` on Android.
+
+The overlay shows chat bubbles decorated with the target app's icon, and you can toggle between keyboard and microphone input. By default, the mic starts listening automatically when the overlay opens. If you want more space, tap "Open full app" to continue the same conversation in the full Hark chat screen with no context lost.
+
+The session persists when you switch between apps (the overlay stays on screen). Pressing back dismisses the overlay and resets the session.
+
 ## OACP-enabled apps
 
 Hark works with any app that implements OACP. These are tested and working today:
@@ -82,4 +92,4 @@ flutter run
 
 ## Roadmap
 
-The short version: the protocol and Kotlin SDK ship today, and Hark is focused next on self-hosted inference, better speech input, and a lighter assistant UI. See the [roadmap](/docs/roadmap) for the tracked priorities.
+The short version: the protocol and Kotlin SDK ship today, and the lightweight assistant overlay is shipped. Hark is focused next on self-hosted inference, better speech input, wake word activation, and chat persistence. See the [roadmap](/docs/roadmap) for the tracked priorities.

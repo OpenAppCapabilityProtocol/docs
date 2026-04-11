@@ -29,6 +29,8 @@ Other SDKs are not documented as installable products until there is code to ins
 - Foreground and broadcast dispatch paths with async result correlation
 - Registration as Android system assistant (`VoiceInteractionService`, `ROLE_ASSISTANT`)
 - Continuous listening mode after assistant-gesture activation
+- Lightweight overlay via FlutterEngineGroup with thin UI shell (zero model loading, instant startup)
+- hark_platform plugin with Pigeon for type-safe platform communication
 - Tested integrations with the OACP Test App demo, Breezy Weather, Binary Eye, Voice Recorder, Wikipedia, ArchiveTune
 
 ### In progress
@@ -41,7 +43,6 @@ Other SDKs are not documented as installable products until there is code to ins
 ### Planned
 
 - **Wake word** - "Hey Hark" activation without touching the phone
-- **Lightweight overlay** - a floating assistant panel over the current app instead of launching the full MainActivity
 - **Personalization** - assistant learns user preferences and per-app vocabulary over time
 - **Gemma 4 single-model pipeline** - once `flutter_gemma` supports it, collapse the two-stage pipeline into a single call
 - **iOS** - exploring feasibility
