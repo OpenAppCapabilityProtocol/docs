@@ -20,6 +20,7 @@ Hark is the open-source assistant built on [OACP](/docs/oacp/what-is-oacp). It d
 
 ## How it works at a glance
 
+0. **Wake** - on-device wake word detection listens for "Hey Hark" and activates the assistant hands-free.
 1. **Listen** - on-device speech-to-text captures your voice command.
 2. **Discover** - scans installed apps for OACP capability manifests via Android `ContentProvider`.
 3. **Resolve** - two-stage on-device AI pipeline matches your command to the right app action and extracts parameters.
@@ -92,4 +93,4 @@ flutter run
 
 ## Roadmap
 
-The short version: the protocol and Kotlin SDK ship today, and the lightweight assistant overlay is shipped. Hark is focused next on self-hosted inference, better speech input, wake word activation, and chat persistence. See the [roadmap](/docs/roadmap) for the tracked priorities.
+The short version: the protocol and Kotlin SDK ship today, and the lightweight assistant overlay is shipped. Wake word detection ("Hey Hark") is in progress with in-app listening working now and a background service coming next. Hark is also focused on self-hosted inference, better speech input, and chat persistence. See the [roadmap](/docs/roadmap) for the tracked priorities.

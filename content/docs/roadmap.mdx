@@ -35,14 +35,13 @@ Other SDKs are not documented as installable products until there is code to ins
 
 ### In progress
 
+- **Wake word** - "Hey Hark" on-device detection using openWakeWord with ONNX Runtime. Phase 1 (in-app listening, auto-mic activation) is working. Phase 2 (background service for detection when the app is fully closed) is next.
 - **Self-hosted inference** - connect Hark to Ollama or LM Studio on a local network for unlimited context and `OACP.md` consumption
 - **BYOK cloud fallback** - bring-your-own-key for OpenAI, Gemini, Anthropic when no local model is available
 - **Better STT** - evaluate whisper.cpp and sherpa-onnx for fully on-device speech recognition
 - **Disambiguation UI** - show top candidates as chips when scores are close and learn from user feedback
 
 ### Planned
-
-- **Wake word** - "Hey Hark" activation without touching the phone
 - **Personalization** - assistant learns user preferences and per-app vocabulary over time
 - **Gemma 4 single-model pipeline** - once `flutter_gemma` supports it, collapse the two-stage pipeline into a single call
 - **iOS** - exploring feasibility

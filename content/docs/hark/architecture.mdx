@@ -57,6 +57,12 @@ Main (Dart)    -> HarkMainApi (Kotlin)     -> Overlay relay    -> HarkOverlayFlu
 4. The overlay renders chat bubbles with app icons, a keyboard/mic toggle, and auto-activates the mic on open.
 5. On dismiss, the overlay engine is kept warm for the next invocation.
 
+## Wake word detection
+
+Hark supports hands-free activation via the wake phrase "Hey Hark". Wake word detection runs on-device using [openWakeWord](https://github.com/dscripka/openWakeWord) (Apache 2.0) with ONNX Runtime for inference. A custom-trained model (201KB) listens continuously for the trigger phrase and auto-starts the microphone when detected. The wake word engine is integrated through Pigeon bindings in `hark_platform`, consistent with the rest of the native bridge.
+
+AudioRecord is a shared resource on Android, so the wake word listener and STT cannot run simultaneously. When the wake phrase is detected, the wake word engine stops its audio stream before STT begins listening. Once the voice command completes, the wake word engine restarts. This mutual exclusion is handled automatically in the platform plugin. The wake word engine persists even when the app is backgrounded, so detection continues across app switches. Background service support (Phase 2) will allow detection when the app is fully closed.
+
 ## Two-stage resolution
 
 ### Stage 1 - Intent selection (EmbeddingGemma 308M)
