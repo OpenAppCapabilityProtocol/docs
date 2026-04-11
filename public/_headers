@@ -1,0 +1,27 @@
+# Cloudflare Pages custom headers
+# https://developers.cloudflare.com/pages/configuration/headers/
+
+# HTML pages: always revalidate with the server, but use ETag for
+# conditional requests so returning visitors don't re-download unchanged pages.
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/docs/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Next.js hashed static assets: cache forever (new deploy = new hash = new URL)
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Images and fonts: cache for 1 day, revalidate after
+/images/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/*.svg
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/*.png
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/*.ico
+  Cache-Control: public, max-age=86400, must-revalidate
