@@ -68,7 +68,7 @@ export default function LandingPage() {
           MCP for mobile apps.
         </p>
         <h1 className="mb-6 max-w-3xl text-4xl font-bold tracking-tight text-[var(--neutral-text)] sm:text-5xl">
-          Let any AI assistant control any Android app.
+          Give your Android app agentic powers. Open source.
         </h1>
         <p className="mb-8 max-w-2xl text-lg text-[var(--neutral-text-secondary)]">
           Apps describe what they can do. Assistants discover and invoke those
@@ -97,8 +97,8 @@ export default function LandingPage() {
           </a>
         </div>
         <p className="mt-6 text-sm text-[var(--neutral-text-secondary)] italic">
-          The name Hark means &quot;to listen.&quot; It&apos;s also the
-          creator&apos;s name.
+          Hark means &quot;to listen.&quot; It&apos;s also my name. I
+          built this because I wanted my apps to talk to each other.
         </p>
       </section>
 
