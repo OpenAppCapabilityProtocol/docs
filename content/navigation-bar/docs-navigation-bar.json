@@ -16,6 +16,21 @@
           ]
         },
         {
+          "title": "Get Started",
+          "items": [
+            {
+              "title": "Try It Out",
+              "slug": "content/docs/get-started/try-hark.mdx",
+              "_template": "item"
+            },
+            {
+              "title": "Add OACP to Your App",
+              "slug": "content/docs/get-started/add-oacp.mdx",
+              "_template": "item"
+            }
+          ]
+        },
+        {
           "title": "OACP Protocol",
           "items": [
             {
@@ -24,18 +39,23 @@
               "_template": "item"
             },
             {
-              "title": "How OACP Works",
+              "title": "How It Works",
               "slug": "content/docs/oacp/how-it-works.mdx",
               "_template": "item"
             },
             {
-              "title": "Getting Started",
-              "slug": "content/docs/oacp/getting-started.mdx",
+              "title": "oacp.json Reference",
+              "slug": "content/docs/oacp/oacp-json.mdx",
               "_template": "item"
             },
             {
-              "title": "OACP Integration",
-              "slug": "content/docs/oacp/non-flutter-integration.mdx",
+              "title": "Entity Providers",
+              "slug": "content/docs/oacp/entity-providers.mdx",
+              "_template": "item"
+            },
+            {
+              "title": "Integration Guide",
+              "slug": "content/docs/oacp/getting-started.mdx",
               "_template": "item"
             }
           ]
@@ -44,7 +64,7 @@
           "title": "Hark",
           "items": [
             {
-              "title": "Hark Overview",
+              "title": "Overview",
               "slug": "content/docs/hark/overview.mdx",
               "_template": "item"
             },
@@ -54,68 +74,80 @@
               "_template": "item"
             },
             {
-              "title": "OACP Test App Demo",
+              "title": "NLU Pipeline",
+              "slug": "content/docs/hark/nlu-architecture.mdx",
+              "_template": "item"
+            },
+            {
+              "title": "Wake Word",
+              "slug": "content/docs/hark/wake-word.mdx",
+              "_template": "item"
+            },
+            {
+              "title": "Test App Demo",
               "slug": "content/docs/hark/demo-walkthrough.mdx",
               "_template": "item"
             }
           ]
         },
         {
-          "title": "SDKs",
+          "title": "Android SDK",
           "items": [
             {
-              "title": "Kotlin SDK",
-              "items": [
-                {
-                  "title": "Quick Start",
-                  "slug": "content/docs/sdks/kotlin/quick-start.mdx",
-                  "_template": "item"
-                },
-                {
-                  "title": "Core Components",
-                  "slug": "content/docs/sdks/kotlin/core-components.mdx",
-                  "_template": "item"
-                },
-                {
-                  "title": "Async Results",
-                  "slug": "content/docs/sdks/kotlin/async-results.mdx",
-                  "_template": "item"
-                },
-                {
-                  "title": "API Reference",
-                  "slug": "content/docs/sdks/kotlin/api-reference.mdx",
-                  "_template": "item"
-                }
-              ],
-              "_template": "items"
+              "title": "Quick Start",
+              "slug": "content/docs/sdks/kotlin/quick-start.mdx",
+              "_template": "item"
             },
             {
-              "title": "Flutter SDK (under development)",
-              "items": [
-                {
-                  "title": "Under development",
-                  "slug": "content/docs/sdks/flutter/overview.mdx",
-                  "_template": "item"
-                }
-              ],
-              "_template": "items"
+              "title": "Core Components",
+              "slug": "content/docs/sdks/kotlin/core-components.mdx",
+              "_template": "item"
             },
             {
-              "title": "React Native SDK (under development)",
-              "items": [
-                {
-                  "title": "Under development",
-                  "slug": "content/docs/sdks/react-native/overview.mdx",
-                  "_template": "item"
-                }
-              ],
-              "_template": "items"
+              "title": "Async Results",
+              "slug": "content/docs/sdks/kotlin/async-results.mdx",
+              "_template": "item"
+            },
+            {
+              "title": "API Reference",
+              "slug": "content/docs/sdks/kotlin/api-reference.mdx",
+              "_template": "item"
             }
           ]
         },
         {
-          "title": "Roadmap",
+          "title": "Ecosystem",
           "items": [
+            {
+              "title": "OACP Apps",
+              "slug": "content/docs/ecosystem/apps.mdx",
+              "_template": "item"
+            }
+          ]
+        },
+        {
+          "title": "Contributing",
+          "items": [
+            {
+              "title": "Contributing Guide",
+              "slug": "content/docs/contributing/contributing.mdx",
+              "_template": "item"
+            },
+            {
+              "title": "AI Prompts",
+              "slug": "content/docs/ai-prompts/prompts.mdx",
+              "_template": "item"
+            }
+          ]
+        },
+        {
+          "title": "Resources",
+          "items": [
+            {
+              "title": "FAQ",
+              "slug": "content/docs/faq.mdx",
+              "_template": "item"
+            },
             {
               "title": "Roadmap",
               "slug": "content/docs/roadmap.mdx",

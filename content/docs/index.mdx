@@ -1,48 +1,70 @@
 ---
 title: Documentation
-last_edited: '2026-04-09T00:00:00.000Z'
+last_edited: '2026-04-11T00:00:00.000Z'
 tocIsHidden: true
 ---
+
+**Open App Capability Protocol. An open standard that lets Android apps tell AI assistants what they can do.**
+
+Think of it as [MCP](https://modelcontextprotocol.io/) for mobile apps. An app ships a small JSON manifest describing its capabilities. An assistant discovers that manifest at runtime, matches the user's voice to the right action, and fires a standard Android Intent. No cloud. No vendor lock-in. No special SDK from Google or Apple.
+
+OACP is the protocol. [Hark](/docs/hark/overview) is the open-source assistant that implements it. The name means "to listen."
 
 <cardGrid
   cards={[
     {
+      title: "Try It Out",
+      description: "Install Hark and the Test App. Speak a command. See OACP work end-to-end in 5 minutes.",
+      link: "/docs/get-started/try-hark",
+      linkText: "Get started"
+    },
+    {
+      title: "Add OACP to Your App",
+      description: "Three files. Five minutes. Your app responds to voice commands from any OACP assistant.",
+      link: "/docs/get-started/add-oacp",
+      linkText: "Add OACP"
+    },
+    {
       title: "OACP Protocol",
-      description: "What OACP is, what files an app ships, and how discovery and invocation work on Android.",
+      description: "How discovery, invocation, parameters, and async results work under the hood.",
       link: "/docs/oacp/what-is-oacp",
       linkText: "Read the protocol"
     },
     {
       title: "Hark",
-      description: "The open-source assistant built on OACP. Discovers apps, resolves commands on-device, and dispatches Android intents.",
+      description: "The open-source assistant. On-device AI, wake word, overlay UI. See how it all fits together.",
       link: "/docs/hark/overview",
       linkText: "Meet Hark"
-    },
-    {
-      title: "Kotlin SDK",
-      description: "The Android SDK you can use today. Add a receiver, two asset files, and one manifest entry.",
-      link: "/docs/sdks/kotlin/quick-start",
-      linkText: "Get the SDK"
-    },
-    {
-      title: "Roadmap",
-      description: "What is already shipped, what is in progress, and what is intentionally not documented yet.",
-      link: "/docs/roadmap",
-      linkText: "See the roadmap"
     }
   ]}
 />
 
-## Recommended reading order
+## How it works
 
-- Start with **[What is OACP?](/docs/oacp/what-is-oacp)** if you need the protocol model.
-- Read **[Hark Overview](/docs/hark/overview)** if you want to see the open-source assistant end to end.
-- Jump to **[Kotlin Quick Start](/docs/sdks/kotlin/quick-start)** if you want to expose capabilities from an Android app now.
-- Use **[Roadmap](/docs/roadmap)** only after the basics are clear.
+```
+App ships oacp.json      →  Assistant discovers via ContentProvider
+User speaks a command    →  On-device AI matches to the right capability
+Assistant fires Intent   →  App handles the action, returns a result
+```
+
+No server. No API key. Everything runs on the device.
+
+## Where to start
+
+| You want to... | Start here |
+|---|---|
+| See it working | [Try It Out](/docs/get-started/try-hark) |
+| Add voice control to your app | [Add OACP to Your App](/docs/get-started/add-oacp) |
+| Understand the protocol | [What is OACP?](/docs/oacp/what-is-oacp) |
+| Read the full oacp.json schema | [oacp.json Reference](/docs/oacp/oacp-json) |
+| Learn about Hark's architecture | [Hark Overview](/docs/hark/overview) |
+| See which apps support OACP | [Ecosystem](/docs/ecosystem/apps) |
+| Contribute | [Contributing Guide](/docs/contributing/contributing) |
+| Use AI to help you integrate | [AI Prompts](/docs/ai-prompts/prompts) |
 
 ## Quick links
 
-- **Protocol spec**: [github.com/OpenAppCapabilityProtocol/oacp](https://github.com/OpenAppCapabilityProtocol/oacp)
-- **Kotlin SDK**: [github.com/OpenAppCapabilityProtocol/oacp-android-sdk](https://github.com/OpenAppCapabilityProtocol/oacp-android-sdk)
-- **Hark**: [github.com/OpenAppCapabilityProtocol/hark](https://github.com/OpenAppCapabilityProtocol/hark)
-- **Organization**: [github.com/OpenAppCapabilityProtocol](https://github.com/OpenAppCapabilityProtocol)
+- [github.com/OpenAppCapabilityProtocol/oacp](https://github.com/OpenAppCapabilityProtocol/oacp) - Protocol spec
+- [github.com/OpenAppCapabilityProtocol/oacp-android-sdk](https://github.com/OpenAppCapabilityProtocol/oacp-android-sdk) - Android SDK
+- [github.com/OpenAppCapabilityProtocol/hark](https://github.com/OpenAppCapabilityProtocol/hark) - Hark assistant
+- [github.com/OpenAppCapabilityProtocol](https://github.com/OpenAppCapabilityProtocol) - Organization

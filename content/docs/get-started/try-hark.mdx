@@ -1,0 +1,105 @@
+---
+title: Try It Out
+last_edited: '2026-04-11T00:00:00.000Z'
+tocIsHidden: false
+---
+
+OACP is early. Most apps don't support it yet. The **Test App** is a playground built specifically for trying OACP with Hark. Install both, speak a command, see it work. Five minutes.
+
+## What you need
+
+- An Android device running Android 8.0 (API 26) or higher
+- About 5 minutes for setup, plus ~2 minutes for Hark's first-launch model download
+
+## 1. Install Hark
+
+Download the latest APK from [GitHub Releases](https://github.com/OpenAppCapabilityProtocol/hark/releases) and sideload it.
+
+## 2. Install the OACP Test App
+
+Download the latest APK from [GitHub Releases](https://github.com/OpenAppCapabilityProtocol/oacp/releases). Or clone the repo and build it yourself.
+
+## 3. Set Hark as the default assistant
+
+1. Open **Settings** on your device
+2. Go to **Apps** → **Default apps** → **Digital assistant app**
+3. Select **Hark**
+
+This lets you launch Hark by long-pressing the Home button, just like Google Assistant.
+
+## 4. Try your first command
+
+Long-press the Home button. Hark opens and listens. Say:
+
+> "increment the counter"
+
+The Test App opens and the counter goes up by one. That's OACP working end to end.
+
+## 5. Try more commands
+
+| Say this | What happens |
+|----------|-------------|
+| "increment the counter by 5" | Counter goes up by 5 |
+| "what's the battery level" | Hark reads back battery percentage (no app opens) |
+| "reset the counter" | Counter resets to zero |
+| "set the counter to 42" | Counter jumps to 42 |
+
+## What just happened
+
+Here is the full chain, all running on your device:
+
+1. **Voice capture** - Hark recorded your speech and transcribed it on-device (Whisper)
+2. **Discovery** - Hark queried every installed app for an `oacp.json` manifest via Android ContentProviders
+3. **Intent resolution** - EmbeddingGemma matched your utterance to the right capability from all discovered capabilities
+4. **Parameter extraction** - Qwen3 pulled structured parameters from your sentence ("5", "42", etc.)
+5. **Dispatch** - Hark fired an Android broadcast Intent with the action and parameters. The Test App's receiver handled it.
+
+No cloud. No API key. No account. Everything ran locally on the device.
+
+## For developers: test with adb
+
+You don't need to use your voice every time. Send commands directly via adb:
+
+```bash
+# Increment the counter
+adb shell am broadcast \
+  -a com.oacp.testapp.ACTION_INCREMENT \
+  --ei amount 1
+
+# Set the counter to a specific value
+adb shell am broadcast \
+  -a com.oacp.testapp.ACTION_SET_COUNTER \
+  --ei value 42
+
+# Reset the counter
+adb shell am broadcast \
+  -a com.oacp.testapp.ACTION_RESET
+
+# Check battery (returns result via Hark, not useful standalone)
+adb shell am broadcast \
+  -a com.oacp.testapp.ACTION_GET_BATTERY
+```
+
+This is the same mechanism Hark uses. The broadcast actions and extras match what the Test App declares in its `oacp.json`.
+
+## Troubleshooting
+
+**Nothing happens when I long-press Home**
+
+Hark is not set as the default assistant. Go to Settings → Apps → Default apps → Digital assistant app and select Hark.
+
+**Hark says it can't find any apps**
+
+The Test App is not installed, or it was installed after Hark's last discovery scan. Reinstall the Test App and try again.
+
+**First command is slow**
+
+Hark downloads AI models on first launch. This takes about 2 minutes depending on your connection. Subsequent launches are fast.
+
+**Hark opens but doesn't hear me**
+
+Check that Hark has microphone permission. Go to Settings → Apps → Hark → Permissions → Microphone.
+
+---
+
+The more apps that adopt OACP, the more useful Hark becomes. That's where you come in. **[Add OACP to your app →](/docs/get-started/add-oacp)**

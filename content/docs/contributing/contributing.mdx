@@ -1,0 +1,81 @@
+---
+title: Contributing
+last_edited: '2026-04-11T00:00:00.000Z'
+tocIsHidden: false
+---
+
+Three ways to contribute, ordered by impact.
+
+## 1. Add OACP to an app
+
+This is the single most impactful thing you can do. Every app that ships `oacp.json` makes the entire ecosystem more useful.
+
+Pick any open-source Android app. Fork it. Add OACP. Open a PR.
+
+Here's the process:
+
+1. Pick an app (ideally one you already use)
+2. Follow the [Add OACP guide](/docs/get-started/add-oacp)
+3. Fork the app on GitHub
+4. Add the OACP integration (`oacp.json`, ContentProvider, BroadcastReceiver)
+5. Test with Hark or `adb`
+6. Open a PR against the original repo
+7. If accepted, let us know and we'll add it to the [ecosystem](/docs/ecosystem/apps)
+
+Not sure where to start? The [AI Prompts](/docs/ai-prompts/prompts) page has copy-paste prompts that help you plan an integration, write `oacp.json`, and generate a receiver.
+
+## 2. Test Hark and file issues
+
+Install Hark, try voice commands with [ecosystem apps](/docs/ecosystem/apps), and file issues when things break.
+
+Report issues at: [github.com/OpenAppCapabilityProtocol/hark/issues](https://github.com/OpenAppCapabilityProtocol/hark/issues)
+
+What to report:
+
+- Discovery failures (app not found)
+- Wrong action matched
+- Parameter extraction errors
+- Crash logs
+- UX suggestions
+
+## 3. Protocol feedback
+
+Open issues on the protocol repo: [github.com/OpenAppCapabilityProtocol/oacp/issues](https://github.com/OpenAppCapabilityProtocol/oacp/issues)
+
+Things we want feedback on:
+
+- Missing fields in `oacp.json`
+- Edge cases in discovery
+- Confirmation semantics
+- Entity provider patterns
+- Cross-platform concerns (iOS, desktop)
+
+## Development setup (for Hark contributors)
+
+If you want to work on Hark itself:
+
+```bash
+git clone https://github.com/OpenAppCapabilityProtocol/hark
+```
+
+Requirements:
+
+- Flutter 3.29+
+- Android SDK 35
+- Kotlin 2.0
+- An arm64 Android device (emulator won't work for on-device models)
+
+Build and run:
+
+```bash
+flutter run
+```
+
+Key conventions:
+
+- **State management**: Riverpod 3.x. No codegen, no ChangeNotifier.
+- **Platform bridge**: Pigeon. Regenerate with:
+  ```bash
+  dart run pigeon --input packages/hark_platform/pigeons/messages.dart
+  ```
+- **Branching**: Always branch from main. Never commit directly to main.

@@ -1,0 +1,59 @@
+---
+title: FAQ
+last_edited: '2026-04-11T00:00:00.000Z'
+tocIsHidden: false
+---
+
+### Does OACP require Google Play Services?
+
+No. OACP uses standard Android APIs: ContentProvider for discovery, BroadcastReceiver and Intent for dispatch. No proprietary dependencies.
+
+### Does it work on custom ROMs?
+
+Yes. OACP relies only on standard AOSP APIs. If your ROM supports ContentProvider and BroadcastReceiver (all of them do), OACP works.
+
+### What Android versions are supported?
+
+The OACP Android SDK supports Android 5.0+ (API 21). Hark itself requires Android 8.0+ (API 26) because of speech recognition and overlay features.
+
+### Is Hark on the Play Store?
+
+Not yet. Hark is distributed as an APK from GitHub releases. Play Store publishing is planned.
+
+### Can I use OACP without Hark?
+
+Yes, in principle. Hark is currently the only assistant that supports OACP. But the protocol is open and assistant-agnostic by design.
+
+Google Assistant, Claude, ChatGPT, Perplexity, or any other assistant could adopt OACP. The protocol just needs a ContentProvider scanner and an Intent dispatcher. If apps ship `oacp.json` and assistants implement discovery, OACP works without Hark.
+
+Hark will always remain the open-source reference assistant.
+
+### Does OACP work with Flutter apps?
+
+Yes. Place `oacp.json` in `android/app/src/main/assets/oacp.json` (not in Flutter's `assets/` folder). The ContentProvider and receiver are native Android components, so you write them in Kotlin even in a Flutter project.
+
+### Does OACP work with React Native apps?
+
+Yes, same approach as Flutter. The OACP integration is entirely on the native Android side.
+
+### What about iOS?
+
+Under evaluation. The protocol concepts (capability manifest, discovery, invocation) can map to iOS, but the transport layer would be different. There is no ContentProvider or BroadcastReceiver on iOS.
+
+### Is the protocol stable?
+
+OACP is at v0.3. The schema is functional and apps are using it. v1.0 is the stability target with schema lock, compatibility guarantees, and long-term IDs. Breaking changes before v1.0 are possible but will be documented.
+
+### How is OACP different from Android 15 AppFunctions?
+
+AppFunctions is Google's vendor-specific API shipping with Android 15+. OACP works on Android 5.0+, is open and assistant-agnostic, and provides richer metadata (aliases, examples, disambiguation hints, entity providers).
+
+The two may converge. OACP is exploring an annotation processor that generates both `oacp.json` and AppFunctions metadata from a single source.
+
+### How big is the SDK?
+
+The AAR is 27 KB. Six classes, zero transitive dependencies beyond `androidx.annotation`.
+
+### Does Hark send data to the cloud?
+
+No. All AI inference runs on-device using EmbeddingGemma (308M) for intent matching and Qwen3 (0.6B) for parameter extraction. No data leaves the device.

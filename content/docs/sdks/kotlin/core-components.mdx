@@ -1,6 +1,6 @@
 ---
 title: Core Components
-last_edited: '2026-04-09T00:00:00.000Z'
+last_edited: '2026-04-11T00:00:00.000Z'
 tocIsHidden: false
 ---
 
@@ -14,6 +14,9 @@ The OACP Android SDK gives you a small set of drop-in classes that cover everyth
 | `OacpReceiver` | Abstract `BroadcastReceiver` base class. Parses parameters, extracts request IDs, sends async results. You implement one method. |
 | `OacpParams` | Type-safe parameter access. `params.getString("query")`, `params.getInt("volume")`. Matches by suffix for build-variant safety. |
 | `OacpResult` | Result builder. `OacpResult.success("Done!")`, `OacpResult.error("not_found", "...")`. Auto-broadcasts to the assistant. |
+| `OacpActivity` | Abstract `Activity` base class for foreground actions. Auto-extracts request ID and parameters. Provides `sendResult()` helper. |
+| `OacpEntitySource` | Interface for serving dynamic entity data (playlists, contacts, bookmarks). Register with `OacpProvider.setEntitySource()`. |
+| `OacpEntity` | Data class for entity items returned by `OacpEntitySource.queryEntities()`. |
 | `Oacp` | Protocol constants - standard extra keys, status values, error codes. |
 
 ## Reading parameters
@@ -43,9 +46,25 @@ OACP is designed for real Android projects with multiple build variants:
 - **Receiver code** - match with `action.endsWith(".ACTION_X")` - works for `.debug`, `.staging`, etc.
 - **`OacpParams`** - resolves parameters by suffix, so `EXTRA_QUERY` matches regardless of prefix
 
-## Foreground actions
+## Foreground actions with OacpActivity
 
-For actions that need UI (camera, editor, etc.), use an `Activity` instead of a `BroadcastReceiver`.
+For actions that need UI (camera, editor, etc.), extend `OacpActivity`:
+
+```kotlin
+class CameraActivity : OacpActivity() {
+    override fun onOacpAction(action: String, params: OacpParams) {
+        val mode = params.getString("mode") ?: "photo"
+        setupCamera(mode)
+    }
+
+    private fun onPhotoTaken(path: String) {
+        sendResult(OacpResult.success("Photo saved", mapOf("path" to path)))
+        finish()
+    }
+}
+```
+
+`OacpActivity` auto-extracts `requestId` and `params` from the intent. It handles both `onCreate` and `onNewIntent` for `singleTask` activities. Call `sendResult()` to broadcast results back to the assistant.
 
 **In `oacp.json`:**
 
@@ -68,7 +87,34 @@ For actions that need UI (camera, editor, etc.), use an `Activity` instead of a 
 </activity>
 ```
 
-Parse parameters from the launching intent in your Activity's `onCreate`.
+You can also skip `OacpActivity` and parse the intent directly in any Activity's `onCreate`. `OacpActivity` is a convenience, not a requirement.
+
+## Dynamic entities with OacpEntitySource
+
+If your app has dynamic data that the assistant needs to reference (playlists, alarms, bookmarks), implement `OacpEntitySource`:
+
+```kotlin
+class MyEntitySource : OacpEntitySource {
+    override fun queryEntities(
+        context: Context,
+        entityType: String,
+        query: String?
+    ): List<OacpEntity> {
+        if (entityType != "alarm") return emptyList()
+        return alarmDb.getAll()
+            .filter { query == null || it.label.startsWith(query, ignoreCase = true) }
+            .map { OacpEntity(it.id.toString(), it.label, description = it.time) }
+    }
+}
+```
+
+Register it in your `Application.onCreate()`:
+
+```kotlin
+OacpProvider.setEntitySource(MyEntitySource())
+```
+
+The assistant can then query your entities at `content://${applicationId}.oacp/entities/alarm?q=morning`. See [Entity Providers](/docs/oacp/entity-providers) for the full guide.
 
 ## Testing with adb
 

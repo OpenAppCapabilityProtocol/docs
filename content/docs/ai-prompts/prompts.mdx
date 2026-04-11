@@ -1,0 +1,90 @@
+---
+title: AI Prompts for OACP
+last_edited: '2026-04-11T00:00:00.000Z'
+tocIsHidden: false
+---
+
+Copy-paste prompts for Claude, ChatGPT, or any AI assistant. These help you plan integrations, write `oacp.json`, and generate receiver code.
+
+## Prompt 1: Plan OACP integration
+
+```
+I want to add OACP (Open App Capability Protocol) to my Android app.
+
+Read the OACP documentation at https://oacp.dev and plan how to add voice control capabilities to my app.
+
+My app is: [describe your app and what it does]
+
+For each feature that could be voice-controlled, suggest:
+- A capability ID (snake_case)
+- Whether it should be a broadcast (background) or activity (foreground) action
+- What parameters it needs
+- Good aliases and examples for voice matching
+
+Output a complete oacp.json file and an OacpReceiver implementation.
+```
+
+## Prompt 2: Review oacp.json
+
+```
+Review this oacp.json file for completeness and voice matching quality.
+
+Check:
+- Are there enough aliases? (aim for 5+ per capability)
+- Are the examples realistic user utterances?
+- Are disambiguationHints present for similar-sounding actions?
+- Are parameter types and constraints correct?
+- Is __APPLICATION_ID__ used consistently?
+- Are confirmation semantics appropriate?
+
+[paste your oacp.json here]
+```
+
+## Prompt 3: Generate OacpReceiver
+
+```
+Generate a Kotlin OacpReceiver for these OACP capabilities.
+
+Use the OACP Android SDK (org.oacp.android):
+- Extend OacpReceiver
+- Override onAction()
+- Use OacpParams for type-safe parameter access
+- Return OacpResult.success() or OacpResult.error()
+- Match actions with endsWith() for build variant safety
+
+Capabilities:
+[paste your oacp.json capabilities array here]
+```
+
+## Prompt 4: Write OACP.md context
+
+```
+Write an OACP.md file for my Android app. This file gives AI assistants context about what the app does and how to disambiguate between capabilities.
+
+My app: [describe your app]
+My capabilities: [paste capability IDs and descriptions]
+
+The file should:
+- Start with the app name and a one-line description
+- List each capability with plain-English usage notes
+- Include disambiguation rules for similar actions
+- Note any edge cases or defaults
+```
+
+## Prompt 5: Add OACP to a specific open source app
+
+```
+I want to add OACP support to [app name], an open-source Android app.
+
+The source code is at: [GitHub URL]
+
+Read the app's source code and:
+1. Identify 3-5 features that could be voice-controlled
+2. For each, determine if it's a foreground (needs UI) or background action
+3. Write a complete oacp.json with proper aliases, examples, and parameters
+4. Write an OacpReceiver that handles each action
+5. Show the AndroidManifest.xml additions needed
+6. Write an OACP.md context file
+
+Follow the OACP v0.3 protocol. Use __APPLICATION_ID__ for all package-name-dependent values.
+```

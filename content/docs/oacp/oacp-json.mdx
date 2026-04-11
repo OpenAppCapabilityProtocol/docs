@@ -1,0 +1,268 @@
+---
+title: oacp.json Reference
+last_edited: '2026-04-11T00:00:00.000Z'
+tocIsHidden: false
+---
+
+Complete schema reference for `oacp.json`. Every field, every type, every default.
+
+Place the file at `app/src/main/assets/oacp.json`. For Flutter apps, use `android/app/src/main/assets/oacp.json`.
+
+## Top-level fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `oacpVersion` | string | Yes | Protocol version. Currently `"0.3"`. |
+| `appId` | string | Yes | Always `"__APPLICATION_ID__"`. Replaced at runtime with the package name. |
+| `displayName` | string | Yes | Human-readable app name shown to the user. |
+| `appDomains` | string[] | No | Categories the app belongs to (e.g. `"weather"`, `"music"`, `"productivity"`). |
+| `appKeywords` | string[] | No | App-level keywords used for ranking during intent resolution. |
+| `appAliases` | string[] | No | Alternate names for the app (e.g. `["VLC", "VLC Player"]`). |
+| `capabilities` | Capability[] | Yes | Array of capability objects. See below. |
+| `entityProviders` | EntityProvider[] | No | Dynamic entity sources queried at runtime. See [Entity Providers](/docs/oacp/entity-providers). |
+| `entityTypes` | EntityType[] | No | Custom entity type definitions referenced by parameters. |
+
+## Capability fields
+
+Each object in the `capabilities` array has these fields.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Unique identifier. Use `snake_case`. |
+| `description` | string | Yes | What this capability does. One sentence. |
+| `domain` | string | No | Category (e.g. `"media"`, `"navigation"`). |
+| `aliases` | string[] | No | Alternate phrasings that mean the same thing. |
+| `examples` | string[] | No | Real user utterances that should trigger this capability. |
+| `keywords` | string[] | No | Extra ranking signals for intent resolution. |
+| `disambiguationHints` | string[] | No | Rules for choosing between similar capabilities. |
+| `parameters` | Parameter[] | No | Input parameters extracted from the utterance. |
+| `parametersSchema` | object | No | JSON Schema for parameters. Alternative to the `parameters` array. |
+| `confirmation` | string | No | One of `"never"`, `"always"`, `"if_destructive"`. Default `"never"`. |
+| `confirmationMessage` | string | No | What to ask the user before executing. Used with `"always"` or `"if_destructive"`. |
+| `executionMessage` | string | No | What to say when the action runs (e.g. `"Setting timer..."`). |
+| `visibility` | string | No | `"public"` or `"trusted_only"`. Default `"public"`. |
+| `requiresAuth` | boolean | No | Whether the user must be authenticated. Default `false`. |
+| `requiresForeground` | boolean | No | Whether the app must be in the foreground. Default `false`. |
+| `completionMode` | string | No | One of `"fire_and_forget"`, `"foreground_handoff"`, `"async_result"`. |
+| `sensitivity` | string | No | `"low"`, `"medium"`, or `"high"`. Affects confirmation behavior. |
+| `sideEffects` | string | No | Description of what changes (e.g. `"Deletes the selected file"`). |
+| `idempotent` | boolean | No | Whether calling this twice has the same effect as calling it once. |
+| `requiresUnlock` | boolean | No | Whether the device must be unlocked. |
+| `resultSchema` | object | No | JSON Schema describing the result payload. |
+| `errorCodes` | string[] | No | Known error codes the capability can return. |
+| `resultTransport` | ResultTransport | No | How results are delivered back to the assistant. |
+| `supportsCancellation` | boolean | No | Whether the action can be cancelled mid-execution. |
+| `cancelCapabilityId` | string | No | ID of the capability that cancels this one. |
+| `invoke` | InvokeConfig | Yes | Platform-specific invocation config. |
+
+## Parameter fields
+
+Each object in the `parameters` array has these fields.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Parameter name. Used as the key in extras. |
+| `description` | string | Yes | Semantic explanation of what this parameter represents. |
+| `extractionHint` | string | No | Instruction for the slot-filling model (e.g. `"extract the number of minutes"`). |
+| `type` | string | Yes | One of `"string"`, `"integer"`, `"boolean"`, `"enum"`. |
+| `required` | boolean | No | Whether the parameter must be present. Default `false`. |
+| `enum` | string[] | No | Valid values when `type` is `"enum"`. |
+| `examples` | string[] | No | Example values for this parameter. |
+| `aliases` | object | No | Maps enum values to alternate phrases (e.g. `{"en": ["english", "eng"]}`). |
+| `prompt` | string | No | What to ask the user if the parameter is missing (e.g. `"How many minutes?"`). |
+| `default` | any | No | Default value when not provided. |
+| `minimum` | number | No | Minimum value for `"integer"` type. |
+| `maximum` | number | No | Maximum value for `"integer"` type. |
+| `pattern` | string | No | Regex pattern for validation. |
+| `entityRef` | EntityRef | No | Links this parameter to a dynamic entity provider. |
+| `entitySnapshot` | EntitySnapshot[] | No | Small static set of valid entities. Inline alternative to a provider. |
+
+## Invoke config
+
+The `invoke` object tells the assistant how to launch the capability on each platform.
+
+```json
+"invoke": {
+  "android": {
+    "type": "broadcast",
+    "action": "__APPLICATION_ID__.ACTION_FLASHLIGHT_ON",
+    "extrasMapping": {
+      "duration_minutes": "__APPLICATION_ID__.EXTRA_DURATION_MINUTES"
+    }
+  }
+}
+```
+
+`type` is either `"broadcast"` or `"activity"`.
+
+- `"broadcast"`: sends an Android `Intent` via `sendBroadcast()`. The app handles it in a `BroadcastReceiver`. Best for background operations.
+- `"activity"`: starts an `Activity` via `startActivity()`. Best when the user needs to see UI.
+
+`action` is the intent action string. Use `__APPLICATION_ID__` as the prefix so it resolves to your actual package name.
+
+`extrasMapping` maps parameter names to intent extra keys. Each parameter value is placed into the intent extras under the corresponding key.
+
+## Confirmation semantics
+
+The `confirmation` field controls whether the assistant asks before executing.
+
+| Value | Behavior |
+|-------|----------|
+| `"never"` | Invoke immediately. Show `executionMessage` if provided. |
+| `"always"` | Ask the user before invoking. Show `confirmationMessage` if provided. |
+| `"if_destructive"` | Confirm only if `sideEffects` indicates a destructive action (e.g. deletion). |
+
+## Completion modes
+
+The `completionMode` field tells the assistant what to expect after invocation.
+
+| Value | Behavior |
+|-------|----------|
+| `"fire_and_forget"` | No result expected. The assistant moves on. |
+| `"foreground_handoff"` | The app opens and the user sees the result in the app's UI. |
+| `"async_result"` | The app runs in the background and broadcasts a result via `org.oacp.ACTION_RESULT`. |
+
+## Result transport
+
+When `completionMode` is `"async_result"`, define how the result comes back.
+
+```json
+"resultTransport": {
+  "android": {
+    "type": "broadcast",
+    "action": "org.oacp.ACTION_RESULT"
+  }
+}
+```
+
+The app sends a broadcast with this action after completing the work. The result payload follows `resultSchema` if defined.
+
+## Entity types
+
+Define custom entity types at the top level of `oacp.json`.
+
+```json
+"entityTypes": [
+  {
+    "id": "playlist",
+    "displayName": "Playlist",
+    "description": "A user-created music playlist"
+  }
+]
+```
+
+Parameters reference these types via `entityRef`. See [Entity Providers](/docs/oacp/entity-providers) for the full pattern.
+
+## Entity refs
+
+Link a parameter to an entity type so the assistant can resolve dynamic values.
+
+```json
+{
+  "name": "playlist",
+  "type": "string",
+  "entityRef": {
+    "entityType": "playlist",
+    "resolution": "required",
+    "entityDisambiguationPrompt": "Which playlist?"
+  }
+}
+```
+
+`resolution` can be `"required"` (must resolve to a known entity) or `"optional"` (free-form input is accepted as a fallback).
+
+## Full example
+
+Two capabilities from the OACP Test App. `increment_counter` is a foreground action. `get_battery` is a background action that returns a result.
+
+```json
+{
+  "oacpVersion": "0.3",
+  "appId": "__APPLICATION_ID__",
+  "displayName": "OACP Test App",
+  "appDomains": ["utility"],
+  "appKeywords": ["test", "counter", "battery"],
+  "capabilities": [
+    {
+      "id": "increment_counter",
+      "description": "Increment the on-screen counter by a given amount.",
+      "aliases": ["add to counter", "increase counter", "bump counter"],
+      "examples": [
+        "increment the counter by 5",
+        "add 3 to the counter",
+        "bump the counter"
+      ],
+      "keywords": ["counter", "increment", "add"],
+      "parameters": [
+        {
+          "name": "amount",
+          "description": "How much to add to the counter.",
+          "type": "integer",
+          "required": false,
+          "default": 1,
+          "minimum": 1,
+          "maximum": 1000,
+          "prompt": "How much should I add?"
+        }
+      ],
+      "confirmation": "never",
+      "executionMessage": "Incrementing the counter...",
+      "completionMode": "foreground_handoff",
+      "requiresForeground": true,
+      "idempotent": false,
+      "invoke": {
+        "android": {
+          "type": "activity",
+          "action": "__APPLICATION_ID__.ACTION_INCREMENT",
+          "extrasMapping": {
+            "amount": "__APPLICATION_ID__.EXTRA_AMOUNT"
+          }
+        }
+      }
+    },
+    {
+      "id": "get_battery",
+      "description": "Get the current battery level as a percentage.",
+      "aliases": ["check battery", "battery status", "how much battery"],
+      "examples": [
+        "what's the battery level?",
+        "check the battery",
+        "how much battery is left?"
+      ],
+      "keywords": ["battery", "charge", "power"],
+      "parameters": [],
+      "confirmation": "never",
+      "completionMode": "async_result",
+      "resultSchema": {
+        "type": "object",
+        "properties": {
+          "level": { "type": "integer", "description": "Battery percentage 0-100" },
+          "charging": { "type": "boolean", "description": "Whether the device is charging" }
+        }
+      },
+      "resultTransport": {
+        "android": {
+          "type": "broadcast",
+          "action": "org.oacp.ACTION_RESULT"
+        }
+      },
+      "invoke": {
+        "android": {
+          "type": "broadcast",
+          "action": "__APPLICATION_ID__.ACTION_GET_BATTERY"
+        }
+      }
+    }
+  ]
+}
+```
+
+## Tips for better voice matching
+
+**More aliases = more reliable matching.** The intent resolver uses aliases alongside descriptions and examples. Think about how real people phrase things. "Turn on the light", "switch on the torch", "flashlight please" are all the same intent.
+
+**Examples should be real utterances, not descriptions.** Write what a person would actually say out loud. `"play my workout playlist"` is a good example. `"Plays a playlist selected by the user"` is a description, not an example.
+
+**Keywords help with ranking.** When two capabilities from different apps match equally well, keywords break the tie. Include the nouns and verbs specific to your capability.
+
+**disambiguationHints prevent wrong matches.** If your app has "play song" and "play playlist", add hints like `"Use this when the user mentions a specific song title"` to help the resolver pick the right one.
