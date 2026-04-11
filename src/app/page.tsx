@@ -110,7 +110,7 @@ export default function LandingPage() {
           <ProjectCard
             eyebrow="Protocol"
             title="OACP"
-            description="The open standard. Apps ship oacp.json. Assistants discover via ContentProvider. Actions fire via Intent."
+            description="The open standard. Apps ship oacp.json. Assistants discover via ContentProvider."
             href="/docs/oacp/what-is-oacp"
             cta="Read the protocol"
             badge={
@@ -128,7 +128,7 @@ export default function LandingPage() {
           <ProjectCard
             eyebrow="Android SDK"
             title="SDK"
-            description="Six classes, 27 KB AAR. OacpReceiver, OacpActivity, OacpParams, OacpResult. Add voice control in 5 minutes."
+            description="Easily add OACP to any Android app with these SDKs."
             href="/docs/sdks/kotlin/quick-start"
             cta="Get the SDK"
             badge={
@@ -173,23 +173,43 @@ export default function LandingPage() {
               />
             </ol>
           </div>
-          <pre className="overflow-x-auto rounded-lg border border-[var(--neutral-border-subtle)] bg-[var(--neutral-surface)] p-5 text-xs text-[var(--neutral-text)] sm:text-sm">
-            {` ┌─────────────────┐              ┌─────────────────┐
- │   Android App   │              │      Hark       │
- │                 │    OACP      │  (or any OACP   │
- │  oacp.json      │◄────────────►│   assistant)    │
- │  OacpReceiver   │  discover    │                 │
- │  ContentProvider│  + invoke    │  on-device AI   │
- └─────────────────┘              └─────────────────┘
-        │                                │
-        │         "Hey Hark,             │
-        │      what's the weather?"      │
-        │                                │
-        ▼                                ▼
- App processes request          Assistant speaks result
- in background, sends           "Currently 22 degrees,
- org.oacp.ACTION_RESULT          partly cloudy"`}
-          </pre>
+          <div className="space-y-6">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary-text)]">
+                Background action (round trip)
+              </p>
+              <pre className="overflow-x-auto rounded-lg border border-[var(--neutral-border-subtle)] bg-[var(--neutral-surface)] p-4 text-xs text-[var(--neutral-text)] sm:text-sm">
+{` "Hey Hark, what's the weather?"
+        │
+        ▼
+ ┌─────────────┐  broadcast   ┌─────────────────┐
+ │    Hark     │─────────────►│  Weather App    │
+ │  on-device  │   (OACP)     │                 │
+ │     AI      │◄─────────────│  fetches data   │
+ └─────────────┘ ACTION_RESULT└─────────────────┘
+        │        
+        ▼
+ "Currently 22°, partly cloudy"`}
+              </pre>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary-text)]">
+                Foreground action (one way)
+              </p>
+              <pre className="overflow-x-auto rounded-lg border border-[var(--neutral-border-subtle)] bg-[var(--neutral-surface)] p-4 text-xs text-[var(--neutral-text)] sm:text-sm">
+{` "Hey Hark, take a picture with
+  front camera in 2 seconds"
+        │
+        ▼
+ ┌─────────────┐   (OACP)     ┌─────────────────┐
+ │    Hark     │─────────────►│  Camera App     │
+ │  on-device  │  activity    │                 │
+ │     AI      │              │  opens camera,  │
+ └─────────────┘              │  2s countdown   │
+                              └─────────────────┘`}
+              </pre>
+            </div>
+          </div>
         </div>
       </section>
 
