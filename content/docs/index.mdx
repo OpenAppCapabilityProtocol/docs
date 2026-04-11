@@ -4,11 +4,11 @@ last_edited: '2026-04-11T00:00:00.000Z'
 tocIsHidden: true
 ---
 
-**Open App Capability Protocol. An open standard that lets Android apps tell AI assistants what they can do.**
+**OACP is MCP for mobile apps.**
 
-Think of it as [MCP](https://modelcontextprotocol.io/) for mobile apps. An app ships a small JSON manifest describing its capabilities. An assistant discovers that manifest at runtime, matches the user's voice to the right action, and fires a standard Android Intent. No cloud. No vendor lock-in. No special SDK from Google or Apple.
+Apps describe what they can do in a JSON file. Assistants discover those capabilities at runtime. Voice commands become Android Intents. Everything runs on-device. No cloud. No vendor lock-in.
 
-OACP is the protocol. [Hark](/docs/hark/overview) is the open-source assistant that implements it. The name means "to listen."
+[Hark](/docs/hark/overview) is the open-source assistant that brings OACP to life. The name means "to listen." Eight apps support it today, with more coming.
 
 <cardGrid
   cards={[

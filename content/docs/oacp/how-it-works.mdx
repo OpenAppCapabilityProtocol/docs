@@ -1,6 +1,6 @@
 ---
 title: How OACP Works
-last_edited: '2026-04-09T00:00:00.000Z'
+last_edited: '2026-04-11T00:00:00.000Z'
 tocIsHidden: false
 ---
 
@@ -10,24 +10,16 @@ OACP treats installed apps as self-describing toolkits rather than hardcoded int
 
 Actions like opening a camera, scanning a QR code, or navigating to a screen require the app to be visible. The assistant launches the app directly.
 
-```
-User speaks
-  |
-  v
-STT (Speech-to-text)
-  |
-  v
-EmbeddingGemma matches utterance to the right capability
-using semantic similarity against oacp.json metadata
-  |
-  v
-Qwen3 0.6B extracts parameters (numbers, names, values)
-  |
-  v
-startActivity() dispatched to target app
-  |
-  v
-App opens and performs the action
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant H as Hark
+    participant A as App
+    U->>H: "Open the QR scanner"
+    H->>H: STT → EmbeddingGemma → match
+    H->>H: Qwen3 → extract params
+    H->>A: startActivity(ACTION_SCAN)
+    A->>U: App opens, shows camera
 ```
 
 No result is expected from the target app. The assistant confirms based on the action it dispatched.
@@ -36,29 +28,17 @@ No result is expected from the target app. The assistant confirms based on the a
 
 Actions like weather queries, reading counter values, or checking battery level do not need the app to open. The target app processes the request in the background and `sendBroadcast()`s a result back.
 
-```
-User speaks
-  |
-  v
-STT -> EmbeddingGemma -> Qwen3 0.6B -> sendBroadcast()
-  |                                         |
-  |   +-------------------------------------+
-  |   |
-  |   v
-  |  Target app receives broadcast
-  |   |
-  |   v
-  |  App processes request in background
-  |   |
-  |   v
-  |  App broadcasts org.oacp.ACTION_RESULT
-  |   |  (includes org.oacp.extra.REQUEST_ID for correlation)
-  |   |
-  |   v
-  |  Assistant receives result
-  |
-  v
-Chat bubble shows result + TTS reads it aloud
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant H as Hark
+    participant A as App
+    U->>H: "What's the battery level?"
+    H->>H: STT → EmbeddingGemma → match
+    H->>A: sendBroadcast(ACTION_GET_BATTERY)
+    A->>A: Read battery level
+    A->>H: broadcast(ACTION_RESULT, "85%")
+    H->>U: "Battery is at 85 percent"
 ```
 
 The user never leaves the assistant. Results appear inline in the conversation and the assistant speaks the answer.
@@ -69,6 +49,20 @@ At startup (and on app install), the assistant scans for `ContentProvider`s matc
 
 - `/manifest` - the `oacp.json` file, parsed into capability objects that drive resolution.
 - `/context` - the `OACP.md` file, fetched and validated for presence. Currently reserved for future models with larger context windows that can consume the extra semantic detail.
+
+```mermaid
+sequenceDiagram
+    participant H as Hark
+    participant PM as PackageManager
+    participant CP as ContentProvider
+    H->>PM: Query installed apps
+    PM->>H: List of packages
+    loop Each package
+        H->>CP: content://pkg.oacp/manifest
+        CP->>H: oacp.json
+    end
+    H->>H: Parse capabilities, embed descriptions
+```
 
 ## Why two models?
 

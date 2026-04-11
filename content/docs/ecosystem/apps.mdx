@@ -4,9 +4,7 @@ last_edited: '2026-04-11T00:00:00.000Z'
 tocIsHidden: false
 ---
 
-These are open-source apps with OACP support. Most are forks maintained by the OACP org. Each one demonstrates a different integration pattern: foreground actions, background actions, parameters, entity providers.
-
-This is still early. The ecosystem is growing.
+Every app below supports OACP. Install it alongside Hark, and you can control it by voice. Each demonstrates a different OACP pattern -- from simple foreground launches to background queries with async results and parameter extraction.
 
 | App | What it does | Capabilities | Source |
 |-----|-------------|-------------|--------|
@@ -18,6 +16,19 @@ This is still early. The ecosystem is growing.
 | Wikipedia | Encyclopedia | Search articles, open pages | [GitHub](https://github.com/OpenAppCapabilityProtocol/apps-android-wikipedia) |
 | ArchiveTune | Internet Archive music | Play music, search | [GitHub](https://github.com/OpenAppCapabilityProtocol/ArchiveTune) |
 | Live Darbar | Sikh devotional streaming | Play live stream | [GitHub](https://github.com/0xharkirat/live_darbar) |
+
+## What each app demonstrates
+
+| App | OACP pattern |
+|-----|-------------|
+| **OACP Test App** | Foreground + background actions, integer parameters, async results. The full kitchen sink. |
+| **Breezy Weather** | Async background query. The app never opens -- it broadcasts the forecast back to Hark. |
+| **Binary Eye** | Foreground camera launch for scanning, plus parameter-driven barcode creation. |
+| **Voice Recorder** | Simple foreground action. One command starts recording. |
+| **Wikipedia** | Entity providers (language selection) and foreground navigation to articles. |
+| **ArchiveTune** | Parameter extraction. Hark pulls song name and artist from a single utterance. |
+| **Libre Camera** | Simple foreground action. Opens the camera to take a photo. |
+| **Live Darbar** | Simple foreground action. Starts a live devotional stream. |
 
 ## Add your app
 

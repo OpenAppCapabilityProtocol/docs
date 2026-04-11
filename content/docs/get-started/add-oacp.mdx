@@ -145,6 +145,52 @@ Replace `com.example.myapp` with your actual package name. You should see your `
 
 If you have [Hark installed](/docs/get-started/try-hark), long-press Home and say "turn on dark mode." Hark should find your app and dispatch the action.
 
+## Common patterns
+
+Here are three patterns you will see across OACP apps. Each one maps to a different `completionMode` and invocation style.
+
+### Background query (no UI)
+
+The app answers a question without ever becoming visible. The result comes back as a broadcast.
+
+```json
+{
+  "id": "get_weather",
+  "description": "Get current weather conditions",
+  "invoke": { "android": { "type": "broadcast", "action": "__APPLICATION_ID__.ACTION_GET_WEATHER" } },
+  "completionMode": "async_result",
+  "resultTransport": { "android": { "type": "broadcast", "action": "org.oacp.ACTION_RESULT" } }
+}
+```
+
+### Foreground action (open UI)
+
+The app opens and takes over the screen. No result is expected.
+
+```json
+{
+  "id": "take_photo",
+  "description": "Open the camera and take a photo",
+  "invoke": { "android": { "type": "activity", "action": "__APPLICATION_ID__.ACTION_TAKE_PHOTO" } },
+  "completionMode": "foreground_handoff"
+}
+```
+
+### Action with parameters
+
+The assistant extracts structured values from the user's voice and passes them as Intent extras.
+
+```json
+{
+  "id": "set_timer",
+  "description": "Set a countdown timer",
+  "parameters": [
+    { "name": "minutes", "type": "integer", "required": true, "minimum": 1, "maximum": 120 }
+  ],
+  "invoke": { "android": { "type": "broadcast", "action": "__APPLICATION_ID__.ACTION_SET_TIMER" } }
+}
+```
+
 ## What's next
 
 - **[oacp.json reference](/docs/oacp/oacp-json)** - Full schema with parameters, confirmation modes, and visibility options
