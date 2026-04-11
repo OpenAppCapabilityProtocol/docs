@@ -71,7 +71,7 @@ export default function LandingPage() {
           Give your Android app agentic powers.
         </h1>
         <p className="mb-8 max-w-2xl text-lg text-[var(--neutral-text-secondary)]">
-          Apps describe what they can do. AI Assistant (Hark) discovers and invoke those
+          Apps describe what they can do. AI Assistant (Hark) discovers and invokes those
           capabilities. On-device. Open protocol.
         </p>
         <div className="flex flex-wrap gap-3">
@@ -287,7 +287,7 @@ export default function LandingPage() {
               Roadmap
             </Link>
             <Link
-              href="/docs/contributing"
+              href="/docs/contributing/contributing"
               className="text-[var(--neutral-text-secondary)] hover:text-[var(--neutral-text)]"
             >
               Contributing
