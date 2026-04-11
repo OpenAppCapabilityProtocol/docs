@@ -1,6 +1,6 @@
 ---
 title: API Reference
-last_edited: '2026-04-09T00:00:00.000Z'
+last_edited: '2026-04-11T00:00:00.000Z'
 tocIsHidden: false
 ---
 
@@ -15,10 +15,22 @@ Full reference for the public surface of the OACP Android SDK.
 | `Oacp.EXTRA_STATUS` | `"org.oacp.extra.STATUS"` |
 | `Oacp.EXTRA_MESSAGE` | `"org.oacp.extra.MESSAGE"` |
 | `Oacp.EXTRA_RESULT` | `"org.oacp.extra.RESULT"` |
+| `Oacp.EXTRA_CAPABILITY_ID` | `"org.oacp.extra.CAPABILITY_ID"` |
+| `Oacp.EXTRA_SOURCE_PACKAGE` | `"org.oacp.extra.SOURCE_PACKAGE"` |
+| `Oacp.EXTRA_ERROR_CODE` | `"org.oacp.extra.ERROR_CODE"` |
+| `Oacp.EXTRA_ERROR_MESSAGE` | `"org.oacp.extra.ERROR_MESSAGE"` |
+| `Oacp.EXTRA_ERROR_RETRYABLE` | `"org.oacp.extra.ERROR_RETRYABLE"` |
+| `Oacp.STATUS_ACCEPTED` | `"accepted"` |
+| `Oacp.STATUS_STARTED` | `"started"` |
 | `Oacp.STATUS_COMPLETED` | `"completed"` |
 | `Oacp.STATUS_FAILED` | `"failed"` |
-| `Oacp.ERROR_NOT_FOUND` | `"not_found"` |
+| `Oacp.STATUS_CANCELLED` | `"cancelled"` |
+| `Oacp.ERROR_INVALID_PARAMETERS` | `"invalid_parameters"` |
 | `Oacp.ERROR_MISSING_PARAMETERS` | `"missing_parameters"` |
+| `Oacp.ERROR_NOT_FOUND` | `"not_found"` |
+| `Oacp.ERROR_NOT_AUTHENTICATED` | `"not_authenticated"` |
+| `Oacp.ERROR_INTERNAL` | `"internal_error"` |
+| `Oacp.VERSION` | `"0.3"` |
 
 See [`Oacp.kt`](https://github.com/OpenAppCapabilityProtocol/oacp-android-sdk/blob/main/oacp-android/src/main/kotlin/org/oacp/android/Oacp.kt) for the full list.
 
@@ -65,10 +77,57 @@ The receiver automatically:
 - Wraps exceptions in `ERROR_INTERNAL` results
 - Uses `requestId` to correlate responses with the original request
 
+## `OacpActivity` - abstract activity
+
+Subclass and override `onOacpAction` for foreground actions:
+
+```kotlin
+abstract fun onOacpAction(action: String, params: OacpParams)
+```
+
+Protected members:
+
+| Member | Type | Description |
+|--------|------|-------------|
+| `requestId` | `String?` | Extracted from `org.oacp.extra.REQUEST_ID` |
+| `capabilityId` | `String?` | Derived from action string suffix |
+| `params` | `OacpParams` | Type-safe parameter accessor |
+| `sendResult(result, targetPackage?)` | method | Broadcasts an `OacpResult` back to the assistant |
+
+Handles both `onCreate` and `onNewIntent` for `singleTask` launch mode.
+
+## `OacpEntitySource` - entity interface
+
+Implement to serve dynamic entity data:
+
+```kotlin
+interface OacpEntitySource {
+    fun queryEntities(context: Context, entityType: String, query: String?): List<OacpEntity>
+}
+```
+
+Register with `OacpProvider.setEntitySource(source)` in your `Application.onCreate()`.
+
+## `OacpEntity` - entity data class
+
+```kotlin
+data class OacpEntity(
+    val id: String,
+    val displayName: String,
+    val aliases: List<String> = emptyList(),
+    val description: String? = null,
+    val keywords: List<String> = emptyList(),
+    val metadata: Map<String, Any> = emptyMap()
+)
+```
+
 ## `OacpProvider`
 
 Auto-registered via manifest merger at the authority `${applicationId}.oacp`. You never need to instantiate or subclass it directly. It:
 
 - Serves `oacp.json` at `content://${applicationId}.oacp/manifest`
 - Serves `OACP.md` at `content://${applicationId}.oacp/context`
+- Serves entity data at `content://${applicationId}.oacp/entities/<type>?q=query`
 - Substitutes `__APPLICATION_ID__` placeholders with the real package name at runtime, so the same manifest works for `debug`, `staging`, and `release` variants without modification
+
+Static method: `OacpProvider.setEntitySource(source: OacpEntitySource?)` registers the entity handler.

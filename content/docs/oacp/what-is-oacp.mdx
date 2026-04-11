@@ -1,6 +1,6 @@
 ---
 title: What is OACP?
-last_edited: '2026-04-09T00:00:00.000Z'
+last_edited: '2026-04-11T00:00:00.000Z'
 tocIsHidden: false
 ---
 
@@ -61,6 +61,24 @@ Use a broadcast action when the app can do the work without opening UI:
 
 The assistant sends a broadcast, the app does the work, and the app can return an async result on `org.oacp.ACTION_RESULT`.
 
+## How OACP compares
+
+| | OACP | Google Assistant Actions | Android 15 AppFunctions | Siri Intents |
+|---|---|---|---|---|
+| **Min Android** | 5.0 (API 21) | varies | 15 (API 35) | N/A (iOS) |
+| **Open protocol** | Yes (Apache 2.0) | No | No | No |
+| **Assistant-agnostic** | Yes | Google only | Google only | Apple only |
+| **Discovery** | ContentProvider | Play Console | System API | Info.plist |
+| **Metadata richness** | High (aliases, examples, hints, entities) | Medium | Low | Medium |
+| **On-device only** | Yes | No (cloud) | Yes | Partial |
+| **Entity providers** | Yes | No | No | Yes (via Shortcuts) |
+
+OACP and AppFunctions may converge. We are exploring an annotation processor that generates both oacp.json and AppFunctions metadata from a single source.
+
+## Who is using it
+
+Eight apps support OACP today, with more coming. See the [ecosystem](/docs/ecosystem/apps) for the full list.
+
 ## Start building
 
-If you want to add OACP to an app today, start with [Getting Started](/docs/oacp/getting-started). If you want to see the protocol in action first, read [Hark Overview](/docs/hark/overview).
+If you want to see OACP working, start with [Try It Out](/docs/get-started/try-hark). If you want to add OACP to your app, jump to [Add OACP to Your App](/docs/get-started/add-oacp). For the full integration reference, see the [Integration Guide](/docs/oacp/getting-started).

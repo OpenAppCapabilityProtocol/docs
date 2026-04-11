@@ -32,6 +32,12 @@ export default function LandingPage() {
               Docs
             </Link>
             <Link
+              href="/docs/get-started/try-hark"
+              className="hidden rounded-md px-3 py-2 text-sm font-medium text-[var(--neutral-text)] hover:bg-[var(--neutral-surface)] sm:inline-block"
+            >
+              Get Started
+            </Link>
+            <Link
               href="/docs/roadmap"
               className="hidden rounded-md px-3 py-2 text-sm font-medium text-[var(--neutral-text)] hover:bg-[var(--neutral-surface)] sm:inline-block"
             >
@@ -58,26 +64,28 @@ export default function LandingPage() {
             sizes="(max-width: 640px) 210px, 290px"
           />
         </div>
+        <p className="mb-4 text-lg font-medium text-[var(--brand-primary-text)]">
+          MCP for mobile apps.
+        </p>
         <h1 className="mb-6 max-w-3xl text-4xl font-bold tracking-tight text-[var(--neutral-text)] sm:text-5xl">
-          Extend any Android app's capabilities to any on-device AI assistant.
+          Give your Android app agentic powers.
         </h1>
         <p className="mb-8 max-w-2xl text-lg text-[var(--neutral-text-secondary)]">
-          OACP gives apps a simple way to describe what they can do, and gives
-          assistants a standard way to discover and invoke those actions on
-          device.
+          Apps describe what they can do. AI Assistant (Hark) discovers and invokes those
+          capabilities. On-device. Open protocol.
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/docs"
+            href="/docs/get-started/try-hark"
             className="rounded-md bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-hover)]"
           >
-            Read the docs
+            Try It Out
           </Link>
           <Link
-            href="/docs/oacp/getting-started"
+            href="/docs/get-started/add-oacp"
             className="rounded-md border border-[var(--neutral-border)] px-5 py-3 text-sm font-semibold text-[var(--neutral-text)] hover:bg-[var(--neutral-surface)]"
           >
-            Integrate your app
+            Add OACP to Your App
           </Link>
           <a
             href="https://github.com/OpenAppCapabilityProtocol"
@@ -88,6 +96,9 @@ export default function LandingPage() {
             View on GitHub
           </a>
         </div>
+        <p className="mt-6 text-sm text-[var(--neutral-text-secondary)] italic">
+          Hark means &quot;to listen.&quot; It&apos;s also short for my name "Harkirat".
+        </p>
       </section>
 
       {/* Three-card grid */}
@@ -99,7 +110,7 @@ export default function LandingPage() {
           <ProjectCard
             eyebrow="Protocol"
             title="OACP"
-            description="The open standard. oacp.json declares capabilities, ContentProviders expose them, Intents invoke them."
+            description="The open standard. Apps ship oacp.json. Assistants discover via ContentProvider."
             href="/docs/oacp/what-is-oacp"
             cta="Read the protocol"
             badge={
@@ -109,15 +120,15 @@ export default function LandingPage() {
           <ProjectCard
             eyebrow="Open-source assistant"
             title="Hark"
-            description="Voice assistant built on OACP. Two-stage on-device AI pipeline: EmbeddingGemma for intent, Qwen3 for slot filling."
+            description="Open-source voice assistant. On-device AI with EmbeddingGemma + Qwen3. Wake word, overlay UI, async results."
             href="/docs/hark/overview"
             cta="Meet Hark"
             mascot="/oacp-hark-logo.png"
           />
           <ProjectCard
-            eyebrow="SDKs"
-            title="SDKs"
-            description="Kotlin ships today. Flutter and React Native are under development and visible in the docs so contributors can follow along."
+            eyebrow="Android SDK"
+            title="SDK"
+            description="Easily add OACP to any Android app with these SDKs."
             href="/docs/sdks/kotlin/quick-start"
             cta="Get the SDK"
             badge={
@@ -162,16 +173,63 @@ export default function LandingPage() {
               />
             </ol>
           </div>
-          <pre className="overflow-x-auto rounded-lg border border-[var(--neutral-border-subtle)] bg-[var(--neutral-surface)] p-5 text-xs text-[var(--neutral-text)] sm:text-sm">
-            {` ┌──────────────────────────┐        ┌──────────────────────────┐
- │  Any Android app         │        │  Hark (voice assistant)  │
- │  + OACP Kotlin SDK       │◀──────▶│  on-device AI pipeline   │
- │  + oacp.json / OACP.md   │  OACP  │  discovers + dispatches  │
- └──────────────────────────┘        └──────────────────────────┘
-              ▲                                    ▲
-              └──────── OACP Protocol ─────────────┘
-                   (content providers + intents)`}
-          </pre>
+          <div className="space-y-6">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary-text)]">
+                Background action (round trip)
+              </p>
+              <pre className="overflow-x-auto rounded-lg border border-[var(--neutral-border-subtle)] bg-[var(--neutral-surface)] p-4 text-xs text-[var(--neutral-text)] sm:text-sm">
+{` "Hey Hark, what's the weather?"
+        │
+        ▼
+ ┌─────────────┐  broadcast   ┌─────────────────┐
+ │    Hark     │─────────────►│  Weather App    │
+ │  on-device  │   (OACP)     │                 │
+ │     AI      │◄─────────────│  fetches data   │
+ └─────────────┘ ACTION_RESULT└─────────────────┘
+        │        
+        ▼
+ "Currently 22°, partly cloudy"`}
+              </pre>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary-text)]">
+                Foreground action (one way)
+              </p>
+              <pre className="overflow-x-auto rounded-lg border border-[var(--neutral-border-subtle)] bg-[var(--neutral-surface)] p-4 text-xs text-[var(--neutral-text)] sm:text-sm">
+{` "Hey Hark, take a picture with
+  front camera in 2 seconds"
+        │
+        ▼
+ ┌─────────────┐   (OACP)     ┌─────────────────┐
+ │    Hark     │─────────────►│  Camera App     │
+ │  on-device  │  activity    │                 │
+ │     AI      │              │  opens camera,  │
+ └─────────────┘              │  2s countdown   │
+                              └─────────────────┘`}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Ecosystem */}
+      <section className="mx-auto max-w-6xl px-6 py-12">
+        <div className="rounded-xl border border-[var(--neutral-border-subtle)] bg-[var(--neutral-surface)] p-8">
+          <h2 className="mb-3 text-2xl font-bold text-[var(--neutral-text)]">
+            Ecosystem
+          </h2>
+          <p className="mb-6 max-w-2xl text-[var(--neutral-text-secondary)]">
+            8 apps and counting. Breezy Weather, Binary Eye, Wikipedia, and
+            more. Each one ships an oacp.json and works with any OACP assistant
+            out of the box.
+          </p>
+          <Link
+            href="/docs/ecosystem/apps"
+            className="inline-block rounded-md border border-[var(--brand-primary)] px-5 py-2 text-sm font-semibold text-[var(--brand-primary-text)] hover:bg-[var(--brand-primary-light)]"
+          >
+            See all apps
+          </Link>
         </div>
       </section>
 
@@ -179,13 +237,11 @@ export default function LandingPage() {
       <section className="mx-auto max-w-6xl px-6 py-12">
         <div className="rounded-xl border border-[var(--neutral-border-subtle)] bg-[var(--neutral-surface)] p-8">
           <h2 className="mb-3 text-2xl font-bold text-[var(--neutral-text)]">
-            What Is Being Cooked
+            What&apos;s next
           </h2>
           <p className="mb-6 max-w-2xl text-[var(--neutral-text-secondary)]">
-            A fuller open-source AI assistant with on-device AI, a stronger
-            protocol, more SDKs, and more real apps using OACP. The current docs
-            stay a little unfinished on purpose so the next contributors can see
-            where help is needed.
+            Wake word detection is shipped. Background listening, self-hosted
+            inference, and disambiguation UI are next. Everything is open source.
           </p>
           <Link
             href="/docs/roadmap"
@@ -219,10 +275,22 @@ export default function LandingPage() {
               Docs
             </Link>
             <Link
+              href="/docs/ecosystem/apps"
+              className="text-[var(--neutral-text-secondary)] hover:text-[var(--neutral-text)]"
+            >
+              Ecosystem
+            </Link>
+            <Link
               href="/docs/roadmap"
               className="text-[var(--neutral-text-secondary)] hover:text-[var(--neutral-text)]"
             >
               Roadmap
+            </Link>
+            <Link
+              href="/docs/contributing/contributing"
+              className="text-[var(--neutral-text-secondary)] hover:text-[var(--neutral-text)]"
+            >
+              Contributing
             </Link>
             <a
               href="https://github.com/OpenAppCapabilityProtocol"

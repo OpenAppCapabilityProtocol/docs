@@ -1,0 +1,68 @@
+---
+title: Wake Word
+last_edited: '2026-04-11T00:00:00.000Z'
+tocIsHidden: false
+---
+
+Hark supports "Hey Hark" wake word detection using openWakeWord, an open-source library (Apache 2.0) running entirely on-device. Say "Hey Hark" and the microphone activates automatically.
+
+The name "Hark" means "to listen." It's also my name. The coincidence was too good to ignore.
+
+## How it works
+
+The pipeline: AudioRecord (16kHz mono) feeds into Silero VAD (voice activity gate), then into openWakeWord (mel-spectrogram, speech embeddings, keyword detection), across the Pigeon bridge to ChatNotifier, which auto-starts the mic.
+
+Components:
+
+- **openWakeWord**: ONNX-based wake word engine. Runs a mel-spectrogram model and an embedding model to detect the keyword.
+- **Silero VAD**: Voice Activity Detection pre-filter. Saves battery by only running wake word inference when speech is detected.
+- **Custom model**: `hey_harkh.onnx` (201 KB), trained via the openWakeWord Google Colab notebook.
+
+## Architecture
+
+```
+AudioRecord (16kHz)
+  → Silero VAD (is someone speaking?)
+  → openWakeWord engine (is it "Hey Hark"?)
+  → WakeWordDetector.kt (Kotlin wrapper)
+  → HarkPlatformPlugin (Pigeon bridge)
+  → HarkResultFlutterApi.onWakeWordDetected()
+  → ChatNotifier (auto-starts microphone)
+```
+
+Detection threshold: 0.3. Cooldown: 1500ms between detections.
+
+## AudioRecord mutual exclusion
+
+Android only allows one AudioRecord at a time. Wake word detection and speech recognition (SpeechRecognizer) both need the mic. Hark handles this by:
+
+1. Wake word detected. Pause wake word engine (fully stops AudioRecord).
+2. STT starts. Speech is transcribed.
+3. STT finishes. Resume wake word engine (restarts AudioRecord).
+
+The pause/resume cycle causes a roughly 25-second buffer rebuild delay. openWakeWord needs about 10 seconds of audio context in its embedding buffer before it can reliably detect again. This is a known limitation being addressed.
+
+## Current status: Phase 1 (shipped)
+
+In-app wake word detection is working. When Hark is open, "Hey Hark" activates the mic.
+
+## Phase 2 (planned): Background service
+
+A foreground service running wake word detection even when Hark is closed. "Hey Hark" from any screen would launch the overlay and start listening.
+
+## Phase 3 (planned): Continuous listening session
+
+After "Hey Hark" starts a session, the mic stays open for the entire conversation. No need to say the wake word again. The user can interrupt while Hark is speaking (barge-in). This requires acoustic echo cancellation to prevent Hark from hearing its own TTS output.
+
+## Dependencies
+
+- `xyz.rementia:openwakeword:0.1.4` (Maven Central)
+- `com.github.gkonovalov.android-vad:silero:2.0.10` (JitPack)
+- ONNX Runtime 1.23.0
+
+## Preprocessing models
+
+Two models must be at the root of the assets directory (the library hardcodes these paths):
+
+- `melspectrogram.onnx` (mel-spectrogram extraction)
+- `embedding_model.onnx` (speech embedding)

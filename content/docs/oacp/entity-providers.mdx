@@ -1,0 +1,214 @@
+---
+title: Entity Providers
+last_edited: '2026-04-11T00:00:00.000Z'
+tocIsHidden: false
+---
+
+Entity providers serve dynamic data to the assistant at runtime. Playlists, alarms, bookmarks, contacts, saved views. Anything where the set of valid values changes based on user data.
+
+Without entity providers, the assistant can only match against static strings in `oacp.json`. That works for a language picker with 20 entries. It does not work for a music library with 500 playlists.
+
+## When to use them
+
+Use an entity provider when:
+
+- The valid values change at runtime (playlists, alarms, bookmarks)
+- The list is too large to inline in `oacp.json` (contacts, files)
+- The data is user-specific (custom tags, saved searches)
+
+Use an [entity snapshot](#entity-snapshots) instead when:
+
+- The list is small and static (languages, categories, difficulty levels)
+- The values never change between app updates
+
+## Declaring entity types
+
+Define custom entity types at the top level of `oacp.json`.
+
+```json
+"entityTypes": [
+  {
+    "id": "playlist",
+    "displayName": "Playlist",
+    "description": "A user-created music playlist"
+  }
+]
+```
+
+## Declaring entity providers
+
+Entity providers tell the assistant where to query for entities of a given type.
+
+```json
+"entityProviders": [
+  {
+    "id": "user_playlists",
+    "entityType": "playlist",
+    "transport": "provider",
+    "uri": "content://com.example.music.oacp/entities/playlist"
+  }
+]
+```
+
+The `uri` points to a `ContentProvider` in your app. The assistant queries it when it needs to resolve a parameter of this entity type.
+
+## Referencing in parameters
+
+Link a parameter to an entity type with `entityRef`.
+
+```json
+{
+  "name": "playlist",
+  "type": "string",
+  "description": "The playlist to play.",
+  "entityRef": {
+    "entityType": "playlist",
+    "resolution": "required",
+    "entityDisambiguationPrompt": "Which playlist?"
+  }
+}
+```
+
+When `resolution` is `"required"`, the assistant must resolve the user's input to a known entity before invoking the capability. If the input is ambiguous, the assistant shows the `entityDisambiguationPrompt`.
+
+When `resolution` is `"optional"`, the assistant tries to resolve but accepts free-form input as a fallback.
+
+## Implementing OacpEntitySource
+
+Your app needs a Kotlin class that implements `OacpEntitySource`. This is the code that runs when the assistant queries your provider.
+
+```kotlin
+class MusicEntitySource : OacpEntitySource {
+    override fun queryEntities(
+        context: Context,
+        entityType: String,
+        query: String?
+    ): List<OacpEntity> {
+        if (entityType != "playlist") return emptyList()
+        return playlistDb.getAll()
+            .filter { query == null || it.name.startsWith(query, ignoreCase = true) }
+            .map {
+                OacpEntity(
+                    it.id,
+                    it.name,
+                    aliases = listOf(),
+                    description = "${it.trackCount} tracks"
+                )
+            }
+    }
+}
+```
+
+Register it in your `Application.onCreate()`:
+
+```kotlin
+class MyApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        OacpProvider.setEntitySource(MusicEntitySource())
+    }
+}
+```
+
+The `query` parameter is a prefix string. When the user says "play my rock playlist", the assistant queries with `query = "rock"`. Return all matches. The assistant handles ranking and disambiguation.
+
+## Entity snapshots
+
+For small, static sets of values, skip the provider and inline them directly in the parameter definition.
+
+```json
+{
+  "name": "language",
+  "type": "string",
+  "description": "Target language for the article.",
+  "entitySnapshot": [
+    { "id": "en", "displayName": "English" },
+    { "id": "es", "displayName": "Spanish", "aliases": ["espanol"] },
+    { "id": "fr", "displayName": "French", "aliases": ["francais"] },
+    { "id": "de", "displayName": "German", "aliases": ["deutsch"] },
+    { "id": "ja", "displayName": "Japanese" }
+  ]
+}
+```
+
+Each snapshot entry has:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Stable identifier passed as the parameter value. |
+| `displayName` | string | Yes | Human-readable name shown to the user. |
+| `aliases` | string[] | No | Alternate names that resolve to this entity. |
+
+The assistant matches the user's utterance against `displayName` and `aliases`. The resolved `id` is sent as the parameter value.
+
+## Testing with adb
+
+Query your entity provider directly from the command line.
+
+List all entities:
+
+```bash
+adb shell content query --uri "content://com.example.music.oacp/entities/playlist"
+```
+
+Search with a prefix:
+
+```bash
+adb shell content query --uri "content://com.example.music.oacp/entities/playlist?q=rock"
+```
+
+You should see rows with `id`, `displayName`, `aliases`, and `description` columns. If you get no results, check that your `Application.onCreate()` calls `OacpProvider.setEntitySource()` and that the `uri` in `oacp.json` matches your provider's authority.
+
+## Example: Wikipedia language selection
+
+A Wikipedia reader app lets users switch languages by voice. The app has ~300 supported languages, but only ~30 are commonly requested. An entity snapshot works here because the list is bounded and changes only with app updates.
+
+The capability in `oacp.json`:
+
+```json
+{
+  "id": "switch_language",
+  "description": "Switch Wikipedia to a different language edition.",
+  "aliases": ["change language", "set language", "use another language"],
+  "examples": [
+    "switch to Spanish Wikipedia",
+    "show me the French version",
+    "change language to Japanese"
+  ],
+  "keywords": ["language", "edition", "translate"],
+  "parameters": [
+    {
+      "name": "language_code",
+      "type": "string",
+      "description": "ISO language code for the target Wikipedia edition.",
+      "required": true,
+      "prompt": "Which language?",
+      "entitySnapshot": [
+        { "id": "en", "displayName": "English" },
+        { "id": "es", "displayName": "Spanish", "aliases": ["espanol", "castellano"] },
+        { "id": "fr", "displayName": "French", "aliases": ["francais"] },
+        { "id": "de", "displayName": "German", "aliases": ["deutsch"] },
+        { "id": "ja", "displayName": "Japanese", "aliases": ["nihongo"] },
+        { "id": "zh", "displayName": "Chinese", "aliases": ["mandarin", "zhongwen"] },
+        { "id": "pt", "displayName": "Portuguese", "aliases": ["portugues"] },
+        { "id": "ru", "displayName": "Russian", "aliases": ["russkiy"] }
+      ]
+    }
+  ],
+  "confirmation": "never",
+  "completionMode": "foreground_handoff",
+  "invoke": {
+    "android": {
+      "type": "activity",
+      "action": "__APPLICATION_ID__.ACTION_SWITCH_LANGUAGE",
+      "extrasMapping": {
+        "language_code": "__APPLICATION_ID__.EXTRA_LANGUAGE_CODE"
+      }
+    }
+  }
+}
+```
+
+User says "Spanish Wikipedia". The assistant matches "Spanish" to the snapshot entry with `displayName: "Spanish"`. It resolves `language_code` to `"es"` and invokes the capability.
+
+User says "show me the espanol version". The assistant matches "espanol" to the `aliases` of the Spanish entry. Same result: `language_code = "es"`.
