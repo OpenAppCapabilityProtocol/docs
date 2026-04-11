@@ -21,6 +21,7 @@ module.exports = {
   assetPrefix,
   images: {
     ...(assetPrefix ? { path: `${assetPrefix}/_next/image` } : {}),
+    unoptimized: isStatic || process.env.UNOPTIMIZED_IMAGES === "true",
     remotePatterns: [
       {
         protocol: "https",
