@@ -1,6 +1,6 @@
 ---
 title: Roadmap
-last_edited: '2026-04-11T00:00:00.000Z'
+last_edited: '2026-04-12T00:00:00.000Z'
 tocIsHidden: false
 ---
 
@@ -25,26 +25,33 @@ Other SDKs are not documented as installable products until there is code to ins
 ### Shipped
 
 - On-device discovery via `ContentProvider` scanning
-- Two-stage NLU: EmbeddingGemma 308M for intent selection, Qwen3 0.6B for slot filling
+- Two-stage NLU: EmbeddingGemma 308M for intent selection, Qwen3 0.5B for slot filling
 - Foreground and broadcast dispatch paths with async result correlation
 - Registration as Android system assistant (`VoiceInteractionService`, `ROLE_ASSISTANT`)
 - Continuous listening mode after assistant-gesture activation
-- Lightweight overlay via FlutterEngineGroup with thin UI shell (zero model loading, instant startup)
-- hark_platform plugin with Pigeon for type-safe platform communication
-- Tested integrations with the OACP Test App demo, Breezy Weather, Binary Eye, Voice Recorder, Wikipedia, ArchiveTune
+- Lightweight overlay via `FlutterEngineGroup` with thin UI shell (zero model loading, instant startup)
+- `hark_platform` plugin with Pigeon for type-safe platform communication
+- **"Hey Hark" wake word** using openWakeWord with ONNX Runtime and a custom-trained 201 KB model
+- **Wake word foreground service** with persistent notification, Stop action, and `START_STICKY` restart — detection survives swipe-from-recents
+- **Overlay launch on detection** via `VoiceInteractionService.showSession()` — say "Hey Hark" from any screen and the assistant panel appears
+- **Lifecycle capability refresh** so uninstalled OACP apps drop out of the registry on app resume without a restart
+- Tested integrations with the OACP Test App demo, Breezy Weather, Binary Eye, Voice Recorder, Libre Camera, Wikipedia, ArchiveTune
 
 ### In progress
 
-- **Wake word** - "Hey Hark" on-device detection using openWakeWord with ONNX Runtime. Phase 1 (in-app listening, auto-mic activation) is working. Phase 2 (background service for detection when the app is fully closed) is next.
-- **Self-hosted inference** - connect Hark to Ollama or LM Studio on a local network for unlimited context and `OACP.md` consumption
-- **BYOK cloud fallback** - bring-your-own-key for OpenAI, Gemini, Anthropic when no local model is available
-- **Better STT** - evaluate whisper.cpp and sherpa-onnx for fully on-device speech recognition
-- **Disambiguation UI** - show top candidates as chips when scores are close and learn from user feedback
+- **Settings screen** — permissions, wake word toggle, model info, about
+- **Action chips and disambiguation** — tappable chips in chat bubbles, disambiguation buttons when top scores are close
+- **Wake word polish** — sensitivity slider, privacy indicator, battery measurement, buffer-rebuild shortening
+- **Better STT** — evaluate whisper.cpp and sherpa-onnx for fully on-device speech recognition
+- **Release packaging** — proper release signing, GitHub Releases, F-Droid submission
 
-### Planned
-- **Personalization** - assistant learns user preferences and per-app vocabulary over time
-- **Gemma 4 single-model pipeline** - once `flutter_gemma` supports it, collapse the two-stage pipeline into a single call
-- **iOS** - exploring feasibility
+### Deferred
+
+- **Self-hosted inference** (Ollama, LM Studio) — the two-stage local pipeline is good enough for current capabilities. Revisit once a real quality ceiling appears.
+- **BYOK cloud** — defer until self-hosted lands or users demand cloud.
+- **Gemma 4 single-model pipeline** — waiting on `flutter_gemma` support and a clear win over the two-stage stack.
+- **Barge-in** (interrupt Hark's TTS mid-sentence) — requires acoustic echo cancellation research.
+- **iOS** — exploring feasibility.
 
 ## Ecosystem
 
