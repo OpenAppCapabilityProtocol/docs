@@ -59,9 +59,11 @@ Main (Dart)    -> HarkMainApi (Kotlin)     -> Overlay relay    -> HarkOverlayFlu
 
 ## Wake word detection
 
-Hark supports hands-free activation via the wake phrase "Hey Hark". Wake word detection runs on-device using [openWakeWord](https://github.com/dscripka/openWakeWord) (Apache 2.0) with ONNX Runtime for inference. A custom-trained model (201KB) listens continuously for the trigger phrase and auto-starts the microphone when detected. The wake word engine is integrated through Pigeon bindings in `hark_platform`, consistent with the rest of the native bridge.
+Hark supports hands-free activation via the wake phrase "Hey Hark". Wake word detection runs on-device using [openWakeWord](https://github.com/dscripka/openWakeWord) (Apache 2.0) with ONNX Runtime for inference. A custom-trained 201KB model listens continuously for the trigger phrase. Detection runs inside a dedicated foreground `WakeWordService` (`FOREGROUND_SERVICE_TYPE_MICROPHONE`) with a persistent notification, so it survives app swipe-from-recents and OEM background kill behavior. The service is controlled through Pigeon bindings in `hark_platform`, consistent with the rest of the native bridge.
 
-AudioRecord is a shared resource on Android, so the wake word listener and STT cannot run simultaneously. When the wake phrase is detected, the wake word engine stops its audio stream before STT begins listening. Once the voice command completes, the wake word engine restarts. This mutual exclusion is handled automatically in the platform plugin. The wake word engine persists even when the app is backgrounded, so detection continues across app switches. Background service support (Phase 2) will allow detection when the app is fully closed.
+On detection, the service pauses the detector (releasing the mic for STT), then calls `HarkApplication.onWakeWordDetected()`, which invokes `HarkVoiceInteractionService.showSession()`. This is the system-sanctioned path for voice assistants to open their UI from the background — Android 12+'s normal background activity launch restrictions don't apply. That triggers `HarkSession.onShow()`, which starts `OverlayActivity`, and the overlay's `onOverlayOpened` callback auto-starts the mic. Say "Hey Hark" from any screen — including the lock screen — and the assistant panel appears with the mic already listening.
+
+AudioRecord is a shared resource on Android, so the wake word listener and STT cannot run simultaneously. After STT finishes, the Dart side sends a resume intent to the service, which restarts the detector. The notification has a **Stop** action that releases the mic without relaunching the app.
 
 ## Two-stage resolution
 

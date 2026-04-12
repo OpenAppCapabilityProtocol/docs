@@ -1,58 +1,83 @@
 ---
 title: Wake Word
-last_edited: '2026-04-11T00:00:00.000Z'
+last_edited: '2026-04-12T00:00:00.000Z'
 tocIsHidden: false
 ---
 
-Hark supports "Hey Hark" wake word detection using openWakeWord, an open-source library (Apache 2.0) running entirely on-device. Say "Hey Hark" and the microphone activates automatically.
+Hark supports "Hey Hark" wake word detection using openWakeWord, an open-source library (Apache 2.0) running entirely on-device. Say "Hey Hark" from any screen and the assistant panel appears with the mic already listening — no need to open the app first.
 
 The name "Hark" means "to listen." It's also my name. The coincidence was too good to ignore.
 
 ## How it works
 
-The pipeline: AudioRecord (16kHz mono) feeds into Silero VAD (voice activity gate), then into openWakeWord (mel-spectrogram, speech embeddings, keyword detection), across the Pigeon bridge to ChatNotifier, which auto-starts the mic.
+A foreground Service (`WakeWordService`) owns the detection pipeline. AudioRecord (16kHz mono) feeds into Silero VAD (voice activity gate), then into openWakeWord (mel-spectrogram, speech embeddings, keyword detection). On detection, the service pauses the detector (releasing the mic for STT), then calls `VoiceInteractionService.showSession()` — the system-sanctioned path that lets voice assistants open their UI from the background without tripping Android 12+'s background activity launch restrictions. That triggers `HarkSession.onShow()`, which launches `OverlayActivity`, and the overlay's open callback auto-starts the mic.
 
 Components:
 
 - **openWakeWord**: ONNX-based wake word engine. Runs a mel-spectrogram model and an embedding model to detect the keyword.
 - **Silero VAD**: Voice Activity Detection pre-filter. Saves battery by only running wake word inference when speech is detected.
 - **Custom model**: `hey_harkh.onnx` (201 KB), trained via the openWakeWord Google Colab notebook.
+- **Foreground Service**: `WakeWordService` with `FOREGROUND_SERVICE_TYPE_MICROPHONE`, persistent notification, and `START_STICKY` so Android restarts it if the process is killed.
+- **VoiceInteractionService**: `HarkVoiceInteractionService.showSession()` is the cross-background overlay launcher. Works from any screen, including when the user has swiped Hark away from Recents.
 
 ## Architecture
 
 ```
-AudioRecord (16kHz)
+AudioRecord (16kHz, inside WakeWordService)
   → Silero VAD (is someone speaking?)
   → openWakeWord engine (is it "Hey Hark"?)
   → WakeWordDetector.kt (Kotlin wrapper)
-  → HarkPlatformPlugin (Pigeon bridge)
-  → HarkResultFlutterApi.onWakeWordDetected()
-  → ChatNotifier (auto-starts microphone)
+  → WakeWordService.onWakeWordDetected()
+      ├─→ detector.pause()  (release mic for STT)
+      ├─→ HarkApplication.onWakeWordDetected()
+      │     → HarkVoiceInteractionService.showSession()
+      │         → HarkSession.onShow() → startActivity(OverlayActivity)
+      │         → OverlayBridgeService.onOverlayOpened() → ChatNotifier.onMicPressed()
+      └─→ HarkResultFlutterApi.onWakeWordDetected() (notify Dart for logging)
 ```
 
 Detection threshold: 0.3. Cooldown: 1500ms between detections.
 
 ## AudioRecord mutual exclusion
 
-Android only allows one AudioRecord at a time. Wake word detection and speech recognition (SpeechRecognizer) both need the mic. Hark handles this by:
+Android only allows one AudioRecord at a time. Wake word detection and speech recognition (SpeechRecognizer) both need the mic. The service handles this by:
 
-1. Wake word detected. Pause wake word engine (fully stops AudioRecord).
-2. STT starts. Speech is transcribed.
-3. STT finishes. Resume wake word engine (restarts AudioRecord).
+1. Wake word detected → pause wake word engine (fully stops AudioRecord).
+2. STT starts and takes the mic.
+3. STT finishes → Dart side calls `setWakeWordPaused(false)`, which sends an `ACTION_RESUME` intent to the service, which restarts the detector.
 
-The pause/resume cycle causes a roughly 25-second buffer rebuild delay. openWakeWord needs about 10 seconds of audio context in its embedding buffer before it can reliably detect again. This is a known limitation being addressed.
+The pause/resume cycle causes a roughly 25-second buffer rebuild delay. openWakeWord needs about 10 seconds of audio context in its embedding buffer before it can reliably detect again. This is a known limitation being investigated.
 
-## Current status: Phase 1 (shipped)
+## User controls
 
-In-app wake word detection is working. When Hark is open, "Hey Hark" activates the mic.
+The foreground notification is always visible while wake word is running. It shows:
 
-## Phase 2 (planned): Background service
+- **Small icon**: Monochrome Hark robot silhouette (required by Android's small-icon tinting rules).
+- **Title**: "Hark".
+- **Text**: "Listening for 'Hey Hark'".
+- **Tap**: Opens the main chat screen.
+- **Stop action**: Sends `ACTION_STOP` to the service, which releases the mic and removes the notification. Returns `START_NOT_STICKY` so Android does not auto-restart after an explicit stop.
 
-A foreground service running wake word detection even when Hark is closed. "Hey Hark" from any screen would launch the overlay and start listening.
+Permissions required on Android 13+:
 
-## Phase 3 (planned): Continuous listening session
+- `RECORD_AUDIO` (runtime, requested by the chat screen)
+- `POST_NOTIFICATIONS` (runtime, requested at init so the FG notification is visible)
+- `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_MICROPHONE` (manifest)
 
-After "Hey Hark" starts a session, the mic stays open for the entire conversation. No need to say the wake word again. The user can interrupt while Hark is speaking (barge-in). This requires acoustic echo cancellation to prevent Hark from hearing its own TTS output.
+## Lifecycle
+
+- The service starts from `ChatNotifier._initAsync()` via `startWakeWordService()` in the Pigeon plugin, which sends an `ACTION_START` intent.
+- Android's `VoiceInteractionService` system binding keeps the process alive indefinitely, even when the user swipes Hark from Recents.
+- `START_STICKY` is an additional safety net: if the OS does kill the service for some reason, it will be restarted with a null intent, which the service handles by re-starting detection.
+- When the user taps **Stop** on the notification, the service releases the detector, removes the notification, and returns `START_NOT_STICKY` so Android does not resurrect it.
+
+## What's next
+
+- **Sensitivity slider** exposed via a Settings screen.
+- **Privacy indicator** in the app when the mic is hot.
+- **Battery impact measurement** on Moto G56 and one other mid-range device.
+- **Buffer-rebuild shortening** for the ~25s recovery after STT.
+- **Barge-in**: interrupt Hark's TTS mid-sentence. Requires acoustic echo cancellation research.
 
 ## Dependencies
 
