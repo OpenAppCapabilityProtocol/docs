@@ -1,0 +1,206 @@
+---
+title: Future Explorations
+last_edited: '2026-04-13T00:00:00.000Z'
+tocIsHidden: false
+---
+
+Longer-horizon ideas for Hark and OACP. Not commitments — a thinking-out-loud page. The [Roadmap](/docs/roadmap) tracks what is actually shipping next.
+
+If one of these resonates, open a discussion on the [oacp repo](https://github.com/OpenAppCapabilityProtocol/oacp/discussions) or the [hark repo](https://github.com/OpenAppCapabilityProtocol/hark/discussions). Community demand is how ideas graduate from this page onto the roadmap.
+
+## How to read this page
+
+Each idea has a **one-line pitch**, a **why it matters**, and a **rough shape** of what building it would look like. No timelines, no priorities. Some are small weekend hacks. Some are multi-month research projects. Some will never happen. That is fine — the page exists so the thinking is not lost.
+
+---
+
+## For users
+
+### Mic audit log
+**Pitch:** "What did Hark hear?" — tappable list of recent transcripts, on-device only, wipeable.
+**Why:** Always-listening features need transparency. Users do not trust what they cannot inspect.
+**Shape:** Append transcripts to a rolling SQLite table on every STT result. Settings screen row opens a viewer with delete-all. Never leaves device.
+
+### Follow-ups without wake word
+**Pitch:** 5-second window after Hark responds where the mic stays hot for a follow-up.
+**Why:** Natural conversation. "Set a timer for 10 minutes" → "make it 15" without saying "Hey Hark" again.
+**Shape:** TTS finish event starts a short VAD window. If speech detected, skip wake word, feed straight to STT.
+
+### Multi-turn memory
+**Pitch:** "Set timer for pasta" then later "how long left on the pasta one?" resolves the same timer.
+**Why:** Single-turn assistants feel dumb. Context carry-over is the single biggest UX jump.
+**Shape:** ChatNotifier keeps last N capability results in a rolling slot context. Slot filler gets access to recent entities as fallback values.
+
+### Voice shortcuts
+**Pitch:** "My morning" = chain of five capabilities fired in order (weather, calendar, timer, music, lights).
+**Why:** Power users want macros. Today every utterance is one-shot.
+**Shape:** Settings screen editor that records a sequence. On trigger, dispatch each capability, speak one summary at the end.
+
+### Whisper mode
+**Pitch:** Quiet TTS plus haptic confirmation when the phone is face-down or the user whispers.
+**Why:** Library, bedroom, meeting. Current TTS volume is socially unworkable in those contexts.
+**Shape:** Detect whisper via audio RMS, detect face-down via accelerometer. Switch TTS to low volume, use haptic patterns for common confirms.
+
+### Screen-aware commands
+**Pitch:** "Add this to my list" knows what "this" is — a song, an article, a product.
+**Why:** The single biggest unlock for assistants on phones. Every other platform is doing this.
+**Shape:** Accessibility service reads the foreground window's view tree. Hark exposes a `$CURRENT_SCREEN` slot type that capabilities can request. Apps opt in via OACP manifest metadata.
+
+### Location triggers
+**Pitch:** "Remind me when I get home" creates a geofence, fires the reminder capability on entry.
+**Why:** Voice is the natural input for location-scoped intents. Typing them is painful.
+**Shape:** New OACP slot type `geofence`. Hark registers the geofence, fires the capability on trigger, speaks the reminder.
+
+### Proactive suggestions
+**Pitch:** "You usually set a timer around 10pm — want one now?" (opt-in, on-device pattern learning only).
+**Why:** Ambient assistants feel magical when they anticipate. Must be opt-in and obviously local or it becomes creepy.
+**Shape:** Log capability fires with timestamp, run a tiny local frequency model, surface via silent notification at learned times.
+
+---
+
+## For developers (OACP protocol)
+
+### Streaming results
+**Pitch:** Async results that emit progress events, not just one final payload.
+**Why:** "Downloading… 40%" is a better UX than a 20-second silent wait.
+**Shape:** Extend async result transport with an ordered sequence of partial events, final event flagged as terminal.
+
+### Capability composition
+**Pitch:** Declarative chains — `weather.today` feeds `calendar.tomorrow` without a round trip through the assistant.
+**Why:** Reduces latency and lets apps express multi-step capabilities without needing the assistant to plan.
+**Shape:** Manifest supports a `composes` section referencing other capabilities by ID with input/output wiring.
+
+### Typed errors with recovery hints
+**Pitch:** Apps return structured errors ("auth_required", "offline", "rate_limited") and the assistant knows what to do about each.
+**Why:** Today every failure is a dead end. With typed errors the assistant can offer "open app to log in" or "try again when online".
+**Shape:** Error enum in the protocol, plus optional `recoveryIntent` field that Hark surfaces as a one-tap chip.
+
+### Dry-run mode
+**Pitch:** "What would this do?" — the assistant asks the app to describe an action without executing it.
+**Why:** Confirmation UX for destructive or costly capabilities. Also enables preview cards before fire.
+**Shape:** Add a `dryRun: true` flag to the dispatch payload. Apps return a preview summary and the assistant shows it before real dispatch.
+
+### LAN-peered discovery
+**Pitch:** Phone asks tablet "what OACP apps do you have?" — assistant can dispatch across devices.
+**Why:** One device rarely has everything. Cross-device discovery is the wedge for ambient multi-device assistants.
+**Shape:** Local mDNS service advertising an OACP peer endpoint. Auth via short PIN pairing. Out of scope: anything that leaves the LAN.
+
+### `oacp-cli`
+**Pitch:** Command-line tool — `validate`, `dispatch --dry`, `discover`.
+**Why:** Developers need a non-assistant way to test their manifests. Today the only way to debug is installing the app and talking to Hark.
+**Shape:** Node or Rust CLI wrapping ContentProvider queries and Intent dispatch via `adb shell am broadcast`.
+
+### Capability marketplace
+**Pitch:** A browsable registry of which apps expose which capabilities.
+**Why:** Discovery for users ("which apps let me do X by voice?") and social proof for developers.
+**Shape:** Static site generator that crawls GitHub for `oacp.json` files and indexes them by capability name and alias.
+
+### i18n in the manifest
+**Pitch:** Capability aliases, examples, and descriptions localized in the manifest itself.
+**Why:** Voice is deeply language-bound. Hard-coding English aliases breaks the moment you ship to non-English users.
+**Shape:** Manifest accepts a `localized` map keyed by BCP-47 tag. Assistant selects by device locale with English fallback.
+
+---
+
+## For developers (SDKs)
+
+### Kotlin DSL for manifests
+**Pitch:** Type-safe manifest builder with IDE autocomplete instead of hand-writing JSON.
+**Why:** JSON manifests are error-prone and lack IDE feedback. A DSL gives compile-time checks.
+**Shape:** Kotlin gradle plugin that processes a DSL block and emits the `oacp.json` file at build time.
+
+### Compose annotations
+**Pitch:** `@OacpCapability` on a Kotlin function — manifest generated automatically.
+**Why:** The manifest duplicates the function signature. Annotations remove the duplication.
+**Shape:** KSP processor that reads annotated functions, generates the manifest and receiver glue code.
+
+### iOS SDK via App Intents bridge
+**Pitch:** OACP manifests map onto Apple App Intents, making iOS apps discoverable by any OACP-aware client.
+**Why:** iOS parity is the first question every developer asks. App Intents is the right foundation.
+**Shape:** Swift library that reads `oacp.json` and emits App Intents definitions at build time.
+
+### Web SDK
+**Pitch:** PWAs expose capabilities via an extended Web App Manifest plus `postMessage` for dispatch.
+**Why:** Web is the underserved platform. OACP on the web would instantly triple the ecosystem.
+**Shape:** Small JS library, manifest extension proposal, reference PWA implementation.
+
+---
+
+## For developers (Hark internals)
+
+### Eval harness
+**Pitch:** Corpus of utterance-to-expected-action pairs, CI runs it on every PR, regressions fail the build.
+**Why:** Model changes are impossible to ship safely without regression tests. Today we vibe-check.
+**Shape:** JSONL corpus, harness that runs the full NLU pipeline on each entry, summary diff posted to PRs.
+
+### Replay tool
+**Pitch:** Record a voice session, replay it against a new model or config, diff the results.
+**Why:** Debugging "why did this utterance fail" is currently a live re-record every time.
+**Shape:** Flag that saves the raw audio, transcript, and NLU outputs as a session bundle. CLI replays it through the current pipeline.
+
+### Plugin API for NLU strategies
+**Pitch:** Third parties can swap in their own intent classifier or slot filler without forking Hark.
+**Why:** Research velocity. People experimenting with new on-device models should be able to test them inside Hark.
+**Shape:** Define `CommandResolver` as a stable public interface, load implementations via a Dart package or config file.
+
+### Inference flamegraph
+**Pitch:** Latency breakdown per NLU stage, visible in-app under a developer settings flag.
+**Why:** "Hark feels slow" has no actionable answer today. Per-stage timings point at the bottleneck.
+**Shape:** Wrap each stage in a timing span, render a simple waterfall under a hidden debug screen.
+
+### Federated embedding improvement
+**Pitch:** Opt-in anonymous gradient upload improves a shared embedding model. Raw audio never leaves the device.
+**Why:** The current embedding model is good but not domain-tuned. Federated learning tunes it without breaking the local-first promise.
+**Shape:** Big research project. Federated averaging server, secure aggregation, clear opt-in UX, threat model review. Years away.
+
+---
+
+## Wild cards
+
+### Agent loops
+**Pitch:** Capability A returns data, Hark plans capability B using that data, all in one conversation turn.
+**Why:** Today every utterance maps to one capability. Real tasks ("book the cheapest flight Monday") are multi-step.
+**Shape:** Add a planner stage after slot filling. It inspects the result and decides whether another capability should fire. Bounded depth, with cost controls.
+
+### Voice cloning for TTS
+**Pitch:** Opt-in — Hark speaks responses in the user's own voice after a short enrollment.
+**Why:** Less jarring than a generic voice, and research suggests users pay more attention to familiar voices.
+**Shape:** On-device voice cloning model, short enrollment flow, strict opt-in and enrollment-deletion controls.
+
+### Sign language input
+**Pitch:** Front camera reads sign language and maps to utterances.
+**Why:** Accessibility. Every other "voice" assistant ignores a large user group.
+**Shape:** Research project. Requires a mobile-capable sign recognition model and a large dataset. Probably not soon.
+
+### Capability sandbox
+**Pitch:** Untrusted apps run in an isolated profile where they cannot see other OACP apps' capabilities.
+**Why:** Mitigates the risk of a hostile app shadowing a trusted capability.
+**Shape:** Tie into Android work profile / user profile APIs. Assistant tracks capability origin and refuses cross-profile dispatch.
+
+### Privacy budget
+**Pitch:** User sets "max N cloud calls per day" and the assistant enforces it across all backends.
+**Why:** Once BYOK cloud lands, users need a hard cap they can reason about, not a per-feature toggle.
+**Shape:** Counter in settings, gating decorator around any network-backed resolver.
+
+---
+
+## Pick one, build it, earn eternal glory
+
+Seriously. If one of these catches your eye:
+
+1. **Pick it.** Comment on the matching discussion thread (or open one) so nobody else duplicates the work.
+2. **Prototype it.** Fork the relevant repo ([hark](https://github.com/OpenAppCapabilityProtocol/hark) or [oacp](https://github.com/OpenAppCapabilityProtocol/oacp)), branch off `main`, build the smallest thing that demonstrates the idea end-to-end. Rough edges are fine — the point is to prove the shape.
+3. **Test it.** On a real device. Emulators lie about microphones, GPUs, intents, and half the Android surface Hark touches.
+4. **Raise a PR.** Link the idea from this page in the description. Include a short video or gif if the change is user-visible — maintainers love videos.
+5. **Collect brownie points.** Merged contributions get a shout-out in the release notes, your handle in `CONTRIBUTORS.md`, and the warm glow of having made an open-source voice assistant slightly less awkward.
+
+No bounty, no contract, no NDA. Just code, a pull request, and the satisfaction of making Hark a little more useful for everyone.
+
+> Pro tip: the small ideas (mic audit log, follow-ups without wake word, typed errors) are the fastest path from "I read the docs" to "my name is on a merged PR". The wild cards are where the research papers live.
+
+## Feedback
+
+Think an idea is bad? Say so. This page is deliberately opinionated so it can be argued with — disagreements sharpen it.
+
+- [OACP discussions](https://github.com/OpenAppCapabilityProtocol/oacp/discussions)
+- [Hark discussions](https://github.com/OpenAppCapabilityProtocol/hark/discussions)
